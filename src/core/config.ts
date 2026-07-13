@@ -1,6 +1,6 @@
 export interface MascotSettings {
   mascotEnabled: boolean;
-  mascotSkin: 'gotinha' | 'robozinho' | 'gatinho' | 'mixed';
+  mascotSkin: 'gotinha' | 'robozinho_azul' | 'robozinho_rosa' | 'robozinho_verde' | 'gatinho_laranja' | 'gatinho_cinza' | 'gatinho_preto' | 'mixed';
   mascotCount: number; // Quantidade de mascotes (1 a 4)
   speedMultiplier: number;
   size: number;

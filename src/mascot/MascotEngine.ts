@@ -52,9 +52,10 @@ export class MascotEngine {
   private celebrationTargetY = 0;
   public isCelebrating = false;
   
-  // Dados de contexto das chamadas
+  // Dados de contexto das chamadas e histórico
   public currentCalledPatient = '';
   public lastAnnouncedHour = -1;
+  public pastPatients: string[] = []; // Nomes curtos das últimas pessoas chamadas
 
   // Callback de desenho
   private onUpdateCallback: () => void = () => {};
@@ -109,7 +110,7 @@ export class MascotEngine {
     // Atualizar dados de contexto do painel em tempo real
     this.updateContextData();
 
-    // Se estiver celebrando chamada, o comportamento é prioritário e ignora outras ações temporárias
+    // Se estiver celebrando chamada, o comportamento é prioritário
     if (this.isCelebrating) {
       if (now > this.celebrationEndTime) {
         this.isCelebrating = false;
@@ -152,7 +153,10 @@ export class MascotEngine {
   private updateContextData() {
     const elements = SigssPanelAdapter.getElements();
     if (elements.patientName) {
-      this.currentCalledPatient = (elements.patientName.textContent || '').trim();
+      const text = (elements.patientName.textContent || '').trim();
+      if (text && text !== '-' && text !== this.currentCalledPatient && text.length > 2) {
+        this.currentCalledPatient = text;
+      }
     }
     
     const now = new Date();
@@ -211,7 +215,7 @@ export class MascotEngine {
     const duration = 2500 + Math.random() * 4500; // 2.5s a 7s
     this.nextStateTime = now + duration;
 
-    // Se estiver caindo ou pulando, aguarda estabilizar
+    // Se estiver caindo ou pulando, aguarda
     if (this.state === 'JUMP' || this.state === 'FALL') {
       return;
     }
@@ -234,50 +238,42 @@ export class MascotEngine {
 
     // Probabilidades de Comportamento
     if (rand < 0.35) {
-      // Caminhar
       this.state = 'WALK';
       const goRight = Math.random() > 0.5;
       this.direction = goRight ? 'RIGHT' : 'LEFT';
       this.targetVx = (goRight ? this.normalSpeed : -this.normalSpeed) * this.config.speedMultiplier;
     } 
     else if (rand < 0.40) {
-      // Tropeçar (Trip) - Raro e engraçado
       this.state = 'TRIP';
       this.actionEndTime = now + 2000;
       this.targetVx = (this.direction === 'RIGHT' ? this.normalSpeed : -this.normalSpeed) * 0.7;
     }
     else if (rand < 0.45) {
-      // Alongamento (Esticar pernas)
       this.state = 'STRETCH';
       this.actionEndTime = now + 2200;
       this.targetVx = 0;
     }
     else if (rand < 0.60) {
-      // Parado (Idle)
       this.state = 'IDLE';
       this.targetVx = 0;
     } 
     else if (rand < 0.70) {
-      // Dormir (Sleep)
       this.state = 'SLEEP';
       this.targetVx = 0;
     } 
     else if (rand < 0.80) {
-      // Pular (Jump)
       this.state = 'JUMP';
       this.vy = this.jumpForce;
       const jumpDir = Math.random() > 0.5 ? 1 : -1;
       this.targetVx = jumpDir * this.normalSpeed * 1.6 * this.config.speedMultiplier;
     }
     else if (rand < 0.90) {
-      // Correr (Run)
       this.state = 'RUN';
       const goRight = Math.random() > 0.5;
       this.direction = goRight ? 'RIGHT' : 'LEFT';
       this.targetVx = (goRight ? this.runSpeed : -this.runSpeed) * this.config.speedMultiplier;
     }
     else {
-      // Escalar se estiver encostado em algum box ou borda
       const isNearLeftWall = this.x < 120;
       const isNearRightWall = this.x + this.width > window.innerWidth - 120;
       
@@ -288,7 +284,6 @@ export class MascotEngine {
         this.vy = -this.climbSpeed * this.config.speedMultiplier;
         this.direction = isNearLeftWall ? 'LEFT' : 'RIGHT';
       } else {
-        // Pulo em cima de um obstáculo próximo
         this.state = 'JUMP';
         this.vy = this.jumpForce * 1.1;
         const centerDir = this.x < window.innerWidth / 2 ? 1 : -1;
@@ -298,13 +293,23 @@ export class MascotEngine {
   }
 
   /**
-   * Dispara a comemoração de chamada de paciente de forma imediata
+   * Dispara a comemoração de chamada de paciente de forma imediata.
+   * Adiciona o paciente ao histórico de chamadas recentes.
    */
   public triggerCallReaction(patientName: string, local: string) {
     if (!this.config.callAwareness) return;
 
     this.currentCalledPatient = patientName;
     const elements = SigssPanelAdapter.getElements();
+    
+    // Adicionar nome curto do paciente ao histórico de comemorações passadas
+    const shortName = this.getShortName(patientName);
+    if (shortName && !this.pastPatients.includes(shortName)) {
+      this.pastPatients.unshift(shortName);
+      if (this.pastPatients.length > 5) {
+        this.pastPatients.pop();
+      }
+    }
     
     if (elements.callingCard) {
       const rect = elements.callingCard.getBoundingClientRect();
@@ -316,16 +321,13 @@ export class MascotEngine {
     }
 
     this.isCelebrating = true;
-    this.celebrationEndTime = Date.now() + 10000; // Comemora por 10 segundos
+    this.celebrationEndTime = Date.now() + 10000;
     
-    // Força o cancelamento imediato de sonos, tropeços ou alongamentos
     this.actionEndTime = 0;
     
-    // Grande pulo de susto inicial e ativa estado de pulo/corrida
     this.vy = this.jumpForce * 1.1;
     this.state = 'JUMP';
     
-    // Vira de frente para a chamada e dá impulso horizontal imediato
     const dx = this.celebrationTargetX - (this.x + this.width / 2);
     this.direction = dx > 0 ? 'RIGHT' : 'LEFT';
     this.targetVx = (dx > 0 ? this.runSpeed : -this.runSpeed) * this.config.speedMultiplier;
@@ -333,10 +335,23 @@ export class MascotEngine {
   }
 
   /**
-   * Aplica física com aceleração e desaceleração linear para movimentos orgânicos
+   * Helper para formatar o nome completo em Nome + Sobrenome
+   */
+  private getShortName(fullName: string): string {
+    if (!fullName) return '';
+    const nameParts = fullName.trim().split(/\s+/);
+    if (nameParts.length > 1) {
+      // Primeira letra maiúscula, restante minúscula para estética
+      const format = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+      return `${format(nameParts[0])} ${format(nameParts[nameParts.length - 1])}`;
+    }
+    return fullName;
+  }
+
+  /**
+   * Aplica física com aceleração e desaceleração linear
    */
   private applyPhysics() {
-    // 1. Caso esteja escalando
     if (this.state === 'CLIMB') {
       this.y += this.vy;
       
@@ -355,14 +370,12 @@ export class MascotEngine {
       return;
     }
 
-    // 2. Aplicação de Inércia Horizontal (Aceleração suave)
     if (this.state === 'TRIP') {
       this.vx += (0 - this.vx) * 0.08;
     } else {
       this.vx += (this.targetVx - this.vx) * this.inertia;
     }
 
-    // 3. Gravidade
     const currentFloor = this.getFloorLevelAt(this.x);
     
     if (this.y < currentFloor) {
@@ -372,11 +385,9 @@ export class MascotEngine {
       }
     }
 
-    // 4. Atualização das coordenadas
     this.x += this.vx;
     this.y += this.vy;
 
-    // 5. Colisão Lateral
     if (this.x < 0) {
       this.x = 0;
       this.vx = -this.vx * 0.4;
@@ -389,7 +400,6 @@ export class MascotEngine {
       this.direction = 'LEFT';
     }
 
-    // 6. Colisão com o Chão / Plataformas
     const updatedFloor = this.getFloorLevelAt(this.x);
     if (this.y >= updatedFloor) {
       const isLanding = this.state === 'FALL' || this.state === 'JUMP';
@@ -405,9 +415,6 @@ export class MascotEngine {
     }
   }
 
-  /**
-   * Retorna a coordenada Y do "chão" na posição X.
-   */
   private getFloorLevelAt(x: number): number {
     const elements = SigssPanelAdapter.getElements();
     const mascotCenterX = x + this.width / 2;
@@ -418,7 +425,6 @@ export class MascotEngine {
       defaultFloor = footerRect.top - this.height;
     }
 
-    // Plataforma A: Caixa de Histórico lateral
     if (elements.historySection) {
       const histRect = elements.historySection.getBoundingClientRect();
       if (mascotCenterX >= histRect.left && mascotCenterX <= histRect.right) {
@@ -428,7 +434,6 @@ export class MascotEngine {
       }
     }
 
-    // Plataforma B: Card grande de chamada ativa
     if (elements.callingCard) {
       const cardRect = elements.callingCard.getBoundingClientRect();
       if (mascotCenterX >= cardRect.left && mascotCenterX <= cardRect.right) {

@@ -12,6 +12,7 @@ class SIGSSMascotCore {
   private mascots: MascotInstance[] = [];
   private isRunning = false;
   private observer: MutationObserver | null = null;
+  private lastCalledPatient = '';
 
   public async init() {
     if (!SigssPanelAdapter.isPanelPage()) {
@@ -62,7 +63,15 @@ class SIGSSMascotCore {
     console.log(`Painel SIGSS+ Mascote: Spawnando ${count} mascote(s)...`);
 
     // Array de skins para rodar em modo "misturado" (mixed)
-    const skinsList: MascotSkinType[] = ['gotinha', 'robozinho', 'gatinho'];
+    const skinsList: MascotSkinType[] = [
+      'gotinha',
+      'gatinho_laranja',
+      'gatinho_cinza',
+      'gatinho_preto',
+      'robozinho_azul',
+      'robozinho_rosa',
+      'robozinho_verde'
+    ];
 
     for (let i = 0; i < count; i++) {
       const engine = new MascotEngine();
@@ -140,32 +149,41 @@ class SIGSSMascotCore {
     requestAnimationFrame(this.animationLoop);
   };
 
-  /**
-   * Escuta novas chamadas e notifica simultaneamente todos os mascotes ativos
-   */
   private setupCallObserver() {
-    const elements = SigssPanelAdapter.getElements();
-    if (!elements.patientName) {
-      console.warn('Painel SIGSS+ Mascote: Elemento de nome de paciente não encontrado para observer.');
-      return;
+    this.lastCalledPatient = '';
+
+    // Carregar o nome inicial do paciente para evitar alarmes falsos de reload
+    const initialElements = SigssPanelAdapter.getElements();
+    if (initialElements.patientName) {
+      this.lastCalledPatient = (initialElements.patientName.textContent || '').trim();
     }
 
-    this.observer = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        const text = (elements.patientName?.textContent || '').trim();
-        if (text && text !== '-' && text.length > 2) {
-          const local = elements.localName?.textContent || '';
-          
-          // Dispara a reação em todos os mascotes ativos
-          this.mascots.forEach(m => {
-            m.engine.triggerCallReaction(text, local);
-          });
-          break;
-        }
+    this.observer = new MutationObserver(() => {
+      const elements = SigssPanelAdapter.getElements();
+      if (!elements.patientName) return;
+
+      const currentText = (elements.patientName.textContent || '').trim();
+
+      // Se detectado paciente válido e diferente do último processado
+      if (
+        currentText &&
+        currentText !== '-' &&
+        currentText.length > 2 &&
+        currentText !== this.lastCalledPatient
+      ) {
+        console.log(`Painel SIGSS+ Mascote: Nova chamada detectada via MutationObserver: ${currentText}`);
+        this.lastCalledPatient = currentText;
+        const local = elements.localName?.textContent || '';
+
+        // Notificar todos os mascotes ativos
+        this.mascots.forEach(m => {
+          m.engine.triggerCallReaction(currentText, local);
+        });
       }
     });
 
-    this.observer.observe(elements.patientName, {
+    // Observar o body inteiro para garantir suporte a recriações parciais da árvore DOM (Comum em React/Vue/Angular)
+    this.observer.observe(document.body, {
       childList: true,
       characterData: true,
       subtree: true

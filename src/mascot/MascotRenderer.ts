@@ -1,6 +1,14 @@
 import { MascotEngine, MascotState, MascotDirection } from './MascotEngine';
 
-export type MascotSkinType = 'gotinha' | 'robozinho' | 'gatinho';
+export type MascotSkinType = 
+  | 'gotinha' 
+  | 'robozinho_azul' 
+  | 'robozinho_rosa' 
+  | 'robozinho_verde' 
+  | 'gatinho_laranja' 
+  | 'gatinho_cinza' 
+  | 'gatinho_preto' 
+  | 'mixed';
 
 export class MascotRenderer {
   private containerEl: HTMLDivElement | null = null;
@@ -13,45 +21,95 @@ export class MascotRenderer {
 
   // Biblioteca ampliada de falas humanizadas, calmas e referências ao criador
   private normalSpeeches = [
-    // Calmaria e Acolhimento
-    "Aguarde pacientemente. Todos serão atendidos com carinho! 🙏",
-    "Respire fundo. A equipe da UBS trabalha para cuidar bem de você. 💙",
-    "Seu bem-estar é nossa prioridade. Obrigado por aguardar! 🏥",
-    "A pressa é inimiga da saúde. Aguarde seu chamado com tranquilidade! 😊",
-    "Cada atendimento leva o tempo necessário para um cuidado de qualidade. 🩺",
-    "Aproveite para relaxar um pouco enquanto aguarda. 🧘‍♂️",
-    
-    // Saúde Preventiva e Dicas
-    "Já bebeu água hoje? Tem bebedouro ali pertinho! 💧",
-    "Estica as pernas um pouquinho se estiver sentado há muito tempo! 🚶‍♂️",
-    "Sabia que o SUS é o maior sistema público de saúde gratuito do mundo? 🇧🇷",
-    "Por favor, não esqueça seus documentos e pertences ao ser chamado! 🪪",
-    "Lavar as mãos com água e sabão salva vidas, viu? 🧼",
-    "Alimentação colorida é saúde garantida. Coma frutas e verduras! 🍎",
-    "Se estiver tossindo ou espirrando, use o cotovelo para cobrir! 🤧",
-    "Mantenha sua caderneta de vacinação sempre atualizada! 💉",
-    
-    // Referências ao Desenvolvedor (Guilherme Paicheco Ferreira)
-    "Sabia que foi o Guilherme Paicheco que me programou? Ele é fera! 💻",
-    "Processando... Engenheiro de Software detectado: Guilherme Paicheco Ferreira! 🤖",
+    // Acolhimento
+    "Olá! 😊 Enquanto aguarda, fique à vontade. Logo será sua vez!",
+    "Obrigado pela paciência! Cada atendimento é realizado com atenção e cuidado. 💙",
+    "Seu atendimento é importante para nós. Obrigado por aguardar! 🩺",
+    "Respire fundo... Você está em um lugar preparado para cuidar da sua saúde. 🌿",
+    "A equipe está trabalhando para atender todos da melhor forma possível! 👩‍⚕️👨‍⚕️",
+    "Um pouquinho de paciência faz toda a diferença. Obrigado por esperar! 🙏",
+    "Enquanto aguarda, aproveite para descansar um pouco. 😌",
+    "Cada paciente merece atenção. Por isso alguns atendimentos podem levar um pouco mais de tempo. 💙",
+    "Seu bem-estar é nossa prioridade! 🏥",
+    "Logo seu nome aparecerá na tela. Fique atento! 👀",
+
+    // Dicas de Saúde
+    "Já bebeu água hoje? Seu corpo agradece! 💧",
+    "Se estiver sentado há muito tempo, movimente um pouco as pernas. 🚶",
+    "Lembre-se de manter sua vacinação em dia! 💉",
+    "Lavar bem as mãos continua sendo uma das melhores formas de prevenir doenças. 🧼",
+    "Dormir bem ajuda seu organismo a funcionar melhor. 😴",
+    "Frutas, verduras e legumes fazem bem para sua saúde. 🥗",
+    "Evite o excesso de açúcar e alimentos ultraprocessados. 🍎",
+    "Se tossir ou espirrar, cubra o nariz e a boca com o cotovelo. 🤧",
+    "Praticar atividades físicas regularmente faz muito bem ao coração. ❤️",
+    "Não se esqueça de tomar seus medicamentos conforme orientação médica. 💊",
+
+    // Curiosidades
+    "Você sabia? O SUS é o maior sistema público de saúde gratuito do mundo! 🇧🇷",
+    "O coração bate cerca de 100 mil vezes por dia. ❤️",
+    "Beber água ajuda até na concentração! 💧",
+    "Seu corpo possui mais de 600 músculos! 💪",
+    "Sorrir pode melhorar o humor. 😄",
+    "O cérebro continua trabalhando até enquanto você dorme. 🧠",
+    "Pequenos hábitos saudáveis fazem grande diferença ao longo dos anos. 🌱",
+
+    // Sobre o Mascote
+    "Enquanto vocês aguardam, eu fico passeando por aqui! 🐾",
+    "Prometo avisar quando encontrar um rato de computador! 🐭",
+    "Será que alguém está olhando para mim agora? 👀",
+    "Ainda bem que não preciso tomar vacina... 😅",
+    "Estou de plantão junto com a equipe! 🚑",
+    "Meu trabalho é deixar a espera um pouquinho mais divertida. 😸",
+    "Vocês esperam atendimento... eu espero um carinho virtual. 🥹",
+    "Ainda estou aprendendo a miar em código binário. 🤖",
+    "Não contem para ninguém, mas adoro aparecer na tela. ✨",
+    "Às vezes finjo que estou trabalhando... mas estou só caminhando mesmo. 🚶‍♂️",
+
+    // Easter Eggs
+    "Sabia que fui programado pelo Guilherme Paicheco Ferreira? 💻",
+    "O Guilherme passou algumas horas me ensinando a conversar com vocês. 😄",
     "Miau! O Guilherme me deu vida para passear por este painel. 🐾",
-    "Olha só, o Guilherme Paicheco Ferreira me criou para trazer alegria a vocês! 🎨",
-    "Estou aqui vigiando o painel que o Guilherme ajudou a melhorar! 🧐"
+    "Se gostou de mim, agradeça ao Guilherme! 🤖",
+    "Processando... Desenvolvedor identificado: Guilherme Paicheco Ferreira. ✔️"
+  ];
+
+  // Piadas e brincadeiras com os nomes de pessoas que já passaram (Humor de sala de espera)
+  private pastPatientJokes = [
+    "Será que o(a) {name} já saiu da consulta ou ficou batendo papo? 🤔",
+    "Espero que o(a) {name} não tenha chorado na hora de tomar a vacina! 💉",
+    "Quem aí conhece o(a) {name}? Passou por aqui correndo! 🏃‍♂️",
+    "Lá se foi o(a) {name}... Tomara que tenha ganhado pirulito no final! 🍭",
+    "Ih, será que o(a) {name} esqueceu a receita? Ah não, tá na mão! 📄",
+    "O(A) {name} entrou no consultório e a fila finalmente andou! 📈",
+    "Se o(a) {name} correr bem rápido, o remédio no posto ainda tá aberto! 🏁",
+    "Desejo uma boa recuperação para o(a) {name}, de coração! 💙"
   ];
 
   private tripSpeeches = [
-    "Ops! Quem deixou esse degrau virtual aqui? 🤕",
-    "Aí! Que escorregada... 😅",
-    "Cuidado com o chão liso! 🧼",
-    "Tropecei no rodapé do painel! 🫣",
-    "Estou bem! Ninguém viu, né? 👀"
+    "Ops! Acho que tropecei num pixel! 😵",
+    "Quem colocou esse degrau aqui? 🤕",
+    "Aí! Essa doeu nos meus circuitos! 🤖",
+    "Escorreguei... mas foi de propósito! 😅",
+    "Prometo que sei andar melhor que isso. 🐾",
+    "Ainda bem que ninguém filmou! 📹",
+    "Tropecei no rodapé da tela. 😂",
+    "Meu equilíbrio precisa de atualização. 🔄",
+    "Quase caí... ufa! 😮‍💨",
+    "Tudo certo! Continuando a patrulha. 🫡"
   ];
 
   private stretchSpeeches = [
-    "Alongando... Estica bem as costas! 🧘‍♂️",
-    "Uh! Que preguiça boa...",
-    "Esticando os circuitos! ⚙️",
-    "Bora dar aquela esticada nas patinhas! 🐾"
+    "Hora de alongar as patinhas! 🐾",
+    "Ui... ficar andando o dia inteiro cansa! 😴",
+    "Esticando os circuitos... ⚙️",
+    "Alongamento concluído! Pronto para continuar. 😄",
+    "Nada melhor que uma boa espreguiçada! 🧘",
+    "Até mascote precisa descansar um pouquinho. 😊",
+    "Pronto! Energia renovada. ⚡",
+    "Ahhh... agora sim! 😌",
+    "Bora continuar o expediente! 💙",
+    "Se eu alongo, você também pode alongar! 🚶"
   ];
 
   constructor(engine: MascotEngine) {
@@ -59,7 +117,7 @@ export class MascotRenderer {
     this.injectStyles();
     this.createMascotElements();
     this.setSkin('gotinha');
-    this.lastTipTime = Date.now() - 25000; // Primeira fala após 20 segundos
+    this.lastTipTime = Date.now() - 25000;
   }
 
   public destroy() {
@@ -74,72 +132,67 @@ export class MascotRenderer {
   }
 
   /**
-   * Atualiza o conteúdo do SVG de acordo com a skin e o estado atual
+   * Renderiza dinamicamente o SVG apropriado para a Skin e o Estado físico atual
    */
   private updateSVG() {
     if (!this.spriteEl) return;
 
     const state = this.engine.state;
-    switch (this.currentSkin) {
-      case 'gotinha':
-        this.spriteEl.innerHTML = this.getGotinhaSVG(state);
-        break;
-      case 'robozinho':
-        this.spriteEl.innerHTML = this.getRobozinhoSVG(state);
-        break;
-      case 'gatinho':
-        this.spriteEl.innerHTML = this.getGatinhoSVG(state);
-        break;
+    if (this.currentSkin === 'gotinha') {
+      this.spriteEl.innerHTML = this.getGotinhaSVG(state);
+    } 
+    else if (this.currentSkin.startsWith('robozinho_')) {
+      const color = this.currentSkin.split('_')[1]; // azul, rosa, verde
+      this.spriteEl.innerHTML = this.getRobozinhoSVG(state, color);
+    } 
+    else if (this.currentSkin.startsWith('gatinho_')) {
+      const color = this.currentSkin.split('_')[1]; // laranja, cinza, preto
+      this.spriteEl.innerHTML = this.getGatinhoSVG(state, color);
     }
   }
 
-  /**
-   * Atualiza coordenadas físicas, estados e balões de diálogo
-   */
   public render() {
     if (!this.containerEl || !this.spriteEl || !this.balloonEl) return;
 
     const config = this.engine.getConfig();
 
-    // 1. Atualizar tamanho, posição e opacidade
     this.containerEl.style.left = `${this.engine.x}px`;
     this.containerEl.style.top = `${this.engine.y}px`;
     this.containerEl.style.width = `${this.engine.width}px`;
     this.containerEl.style.height = `${this.engine.height}px`;
     this.containerEl.style.opacity = `${config.opacity}`;
 
-    // 2. Sempre atualizar a face do SVG dinamicamente caso o estado mude
+    // Atualizar face no SVG de acordo com estado físico (sono, comemoração, batida)
     this.updateSVG();
 
-    // 3. Aplicar classes de estado e direção
     this.spriteEl.className = `sigss-mascot-sprite sigss-skin-${this.currentSkin} state-${this.engine.state.toLowerCase()} dir-${this.engine.direction.toLowerCase()}`;
 
-    // 4. Atualizar balão de informações (Intervalo maior para evitar spam)
     this.updateBalloon(config.callAwareness);
   }
 
   /**
-   * Controla a exibição de balões.
-   * As falas normais agora ocorrem a cada 45 segundos e ficam na tela por 7 segundos.
+   * Controla a exibição de balões, integrando brincadeiras com pacientes passados
    */
   private updateBalloon(callAwareness: boolean) {
     if (!this.balloonEl) return;
 
     const now = Date.now();
 
-    // CASO 1: Reação de comemoração de chamada de paciente
+    // 1. Reação a chamada
     if (this.engine.state === 'CELEBRATE' || (this.engine.state === 'RUN' && this.engine.isCelebrating && callAwareness)) {
       let patientGreet = "📢 Nova chamada!";
       if (this.engine.currentCalledPatient && this.engine.currentCalledPatient !== '-') {
-        const nameParts = this.engine.currentCalledPatient.split(' ');
-        const shortName = nameParts.length > 1 ? `${nameParts[0]} ${nameParts[nameParts.length - 1]}` : nameParts[0];
+        // Encurtar nome completo
+        const nameParts = this.engine.currentCalledPatient.split(/\s+/);
+        const format = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        const shortName = nameParts.length > 1 ? `${format(nameParts[0])} ${format(nameParts[nameParts.length - 1])}` : format(nameParts[0]);
         patientGreet = `✨ Boa consulta, ${shortName}! 🍀`;
       }
       this.setBalloonText(patientGreet, true);
       return;
     }
 
-    // CASO 2: Dormindo
+    // 2. Dormindo
     if (this.engine.state === 'SLEEP') {
       const sleepWords = ["Zzz...", "*Sonhando com vacinas...*", "Mais 5 minutinhos... 💤", "Recarregando as baterias... 🔋"];
       const index = Math.floor((now / 4000) % sleepWords.length);
@@ -147,7 +200,7 @@ export class MascotRenderer {
       return;
     }
 
-    // CASO 3: Tropeçou
+    // 3. Tropeçou
     if (this.engine.state === 'TRIP') {
       if (!this.balloonEl.classList.contains('visible') || this.activeBubbleContent === '') {
         const randTrip = this.tripSpeeches[Math.floor(Math.random() * this.tripSpeeches.length)];
@@ -156,7 +209,7 @@ export class MascotRenderer {
       return;
     }
 
-    // CASO 4: Alongando
+    // 4. Alongando
     if (this.engine.state === 'STRETCH') {
       if (!this.balloonEl.classList.contains('visible') || this.activeBubbleContent === '') {
         const randStretch = this.stretchSpeeches[Math.floor(Math.random() * this.stretchSpeeches.length)];
@@ -165,39 +218,44 @@ export class MascotRenderer {
       return;
     }
 
-    // CASO 5: Falas periódicas e baseadas no ambiente (45 Segundos de intervalo - Sem spam!)
+    // 5. Falas normais e piadas com pacientes do histórico (A cada 45 segundos)
     if (this.engine.state === 'IDLE' || this.engine.state === 'WALK') {
       const timeSinceLastTip = now - this.lastTipTime;
       
       if (timeSinceLastTip > 45000) {
         let chosenSpeech = '';
-        
-        // Se estiver bem alto
-        if (this.engine.y < 120 && this.engine.lastAnnouncedHour >= 0) {
-          const hr = this.engine.lastAnnouncedHour;
-          if (hr >= 7 && hr < 12) {
-            chosenSpeech = "Bom dia! Que o seu dia seja saudável e produtivo. ☀️";
-          } else if (hr >= 12 && hr < 13) {
-            chosenSpeech = "Quase hora do almoço... Bateu aquela fominha! 😋";
-          } else if (hr >= 13 && hr < 18) {
-            chosenSpeech = "Boa tarde! Lembra de beber água nesta tarde. 🥤";
-          } else {
-            chosenSpeech = "Fim de tarde... Já se cuidou hoje? 🌙";
-          }
+
+        // Se houver histórico de pacientes passados, temos 40% de chance de brincar com um deles
+        if (this.engine.pastPatients.length > 0 && Math.random() < 0.40) {
+          const pastName = this.engine.pastPatients[Math.floor(Math.random() * this.engine.pastPatients.length)];
+          const jokeTemplate = this.pastPatientJokes[Math.floor(Math.random() * this.pastPatientJokes.length)];
+          chosenSpeech = jokeTemplate.replace('{name}', pastName);
         } else {
-          chosenSpeech = this.normalSpeeches[Math.floor(Math.random() * this.normalSpeeches.length)];
+          // Relógio do cabeçalho
+          if (this.engine.y < 120 && this.engine.lastAnnouncedHour >= 0) {
+            const hr = this.engine.lastAnnouncedHour;
+            if (hr >= 7 && hr < 12) {
+              chosenSpeech = "Bom dia! Que o seu dia seja saudável e produtivo. ☀️";
+            } else if (hr >= 12 && hr < 13) {
+              chosenSpeech = "Quase hora do almoço... Bateu aquela fominha! 😋";
+            } else if (hr >= 13 && hr < 18) {
+              chosenSpeech = "Boa tarde! Lembra de beber água nesta tarde. 🥤";
+            } else {
+              chosenSpeech = "Fim de tarde... Já se cuidou hoje? 🌙";
+            }
+          } else {
+            chosenSpeech = this.normalSpeeches[Math.floor(Math.random() * this.normalSpeeches.length)];
+          }
         }
 
         this.setBalloonText(chosenSpeech, false);
         this.lastTipTime = now;
       } 
-      // Esconde balão comum após 7 segundos
-      else if (timeSinceLastTip > 7000 && this.balloonEl.classList.contains('visible') && !this.balloonEl.classList.contains('important-balloon')) {
+      else if (timeSinceLastTip > 7500 && this.balloonEl.classList.contains('visible') && !this.balloonEl.classList.contains('important-balloon')) {
         this.balloonEl.classList.remove('visible');
         this.activeBubbleContent = '';
       }
     } else {
-      // Esconde balão comum se estiver correndo ou caindo
       if (!this.balloonEl.classList.contains('important-balloon')) {
         this.balloonEl.classList.remove('visible');
         this.activeBubbleContent = '';
@@ -207,7 +265,6 @@ export class MascotRenderer {
 
   private setBalloonText(text: string, isImportant: boolean) {
     if (!this.balloonEl) return;
-    
     if (this.activeBubbleContent === text) return;
     
     this.activeBubbleContent = text;
@@ -329,10 +386,7 @@ export class MascotRenderer {
         to { transform: translateY(-5px) scale(1.08); }
       }
 
-      /* ==========================================================================
-         ANIMAÇÕES DOS ESTADOS DO MASCOTE (CSS KEYFRAMES)
-         ========================================================================== */
-      
+      /* ANIMAÇÕES */
       .state-idle svg {
         animation: mascotBreath 1.8s ease-in-out infinite;
       }
@@ -432,7 +486,7 @@ export class MascotRenderer {
   }
 
   // ==========================================================================
-  // VETORES SVG COM EXPRESSÕES FACIAIS DINÂMICAS DE ACORDO COM O ESTADO
+  // VETORES SVG DINÂMICOS
   // ==========================================================================
 
   private getGotinhaSVG(state: MascotState): string {
@@ -440,7 +494,6 @@ export class MascotRenderer {
     let mouth = '';
 
     if (state === 'SLEEP') {
-      // Olhos dormindo (arcos) e boca em linha
       eyes = `
         <path d="M21 34 Q24 37 27 34" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" fill="none"/>
         <path d="M37 34 Q40 37 43 34" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" fill="none"/>
@@ -448,7 +501,6 @@ export class MascotRenderer {
       mouth = `<path d="M30 39h4" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>`;
     } 
     else if (state === 'TRIP') {
-      // Olhos de batida (X X) e boca ondulada
       eyes = `
         <path d="M22 31l5 5M27 31l-5 5" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
         <path d="M37 31l5 5M42 31l-5 5" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
@@ -456,7 +508,6 @@ export class MascotRenderer {
       mouth = `<path d="M29 39.5c1-1.5 2-1.5 3 0s2 1.5 3 0" stroke="#1e293b" stroke-width="2" stroke-linecap="round" fill="none"/>`;
     }
     else if (state === 'CELEBRATE') {
-      // Olhos felizes (^ ^) e boca aberta sorrindo (alegria)
       eyes = `
         <path d="M21 34l3-3.5l3 3.5" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         <path d="M37 34l3-3.5l3 3.5" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
@@ -467,7 +518,6 @@ export class MascotRenderer {
       `;
     }
     else if (state === 'STRETCH') {
-      // Olhos concentrados (> <)
       eyes = `
         <path d="M21 31l5 3l-5 3" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         <path d="M43 31l-5 3l5 3" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
@@ -475,7 +525,6 @@ export class MascotRenderer {
       mouth = `<circle cx="32" cy="38" r="2" fill="#1e293b"/>`;
     }
     else {
-      // Normal
       eyes = `
         <circle cx="25" cy="33" r="3.5" fill="#1e293b"/>
         <circle cx="39" cy="33" r="3.5" fill="#1e293b"/>
@@ -504,42 +553,55 @@ export class MascotRenderer {
     `;
   }
 
-  private getRobozinhoSVG(state: MascotState): string {
+  private getRobozinhoSVG(state: MascotState, color: string): string {
     let ledEyes = '';
+    
+    // Configurações de cores da carcaça do robô
+    let baseColor = "#e2e8f0"; // Azul default
+    let strokeColor = "#64748b";
+    let pulseColor = "#ef4444";
+    let ledColor = "#38bdf8";
+
+    if (color === 'rosa') {
+      baseColor = "#fce7f3";
+      strokeColor = "#db2777";
+      pulseColor = "#db2777";
+      ledColor = "#f43f5e";
+    } else if (color === 'verde') {
+      baseColor = "#d1fae5";
+      strokeColor = "#059669";
+      pulseColor = "#ef4444";
+      ledColor = "#10b981";
+    }
 
     if (state === 'SLEEP') {
-      // LEDs apagados ou em riscos horizontais
       ledEyes = `
         <line x1="23" y1="25" x2="28" y2="25" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
         <line x1="36" y1="25" x2="41" y2="25" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
       `;
     } 
     else if (state === 'TRIP') {
-      // LEDs de erro (cruzes)
       ledEyes = `
-        <path d="M23 22l4 4M27 22l-4 4" stroke="#f87171" stroke-width="2" stroke-linecap="round"/>
-        <path d="M37 22l4 4M41 22l-4 4" stroke="#f87171" stroke-width="2" stroke-linecap="round"/>
+        <path d="M23 22l4 4M27 22l-4 4" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
+        <path d="M37 22l4 4M41 22l-4 4" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
       `;
     }
     else if (state === 'CELEBRATE') {
-      // LEDs em corações ou piscando brilhando
       ledEyes = `
         <path d="M22 23.5c.3-1 .8-1 1 0l1 1.5l1-1.5c.2-1 .7-1 1 0v.5l-2.5 3.5l-2.5-3.5v-.5Z" fill="#ef4444"/>
         <path d="M36 23.5c.3-1 .8-1 1 0l1 1.5l1-1.5c.2-1 .7-1 1 0v.5l-2.5 3.5l-2.5-3.5v-.5Z" fill="#ef4444"/>
       `;
     }
     else if (state === 'STRETCH') {
-      // LEDs concentrados
       ledEyes = `
-        <path d="M23 26l2.5-3.5l2.5 3.5" stroke="#38bdf8" stroke-width="2" fill="none"/>
-        <path d="M36 26l2.5-3.5l2.5 3.5" stroke="#38bdf8" stroke-width="2" fill="none"/>
+        <path d="M23 26l2.5-3.5l2.5 3.5" stroke="${ledColor}" stroke-width="2" fill="none"/>
+        <path d="M36 26l2.5-3.5l2.5 3.5" stroke="${ledColor}" stroke-width="2" fill="none"/>
       `;
     }
     else {
-      // Normal
       ledEyes = `
-        <rect x="24" y="23" width="4" height="5" rx="1.5" fill="#38bdf8"/>
-        <rect x="36" y="23" width="4" height="5" rx="1.5" fill="#38bdf8"/>
+        <rect x="24" y="23" width="4" height="5" rx="1.5" fill="${ledColor}"/>
+        <rect x="36" y="23" width="4" height="5" rx="1.5" fill="${ledColor}"/>
       `;
     }
 
@@ -547,38 +609,53 @@ export class MascotRenderer {
       <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M32 58C32 58 27 50 32 46C37 50 32 58 32 58Z" fill="#ff7e00" opacity="0.8"/>
         <path d="M32 56C32 56 29 51 32 48C35 51 32 56 32 56Z" fill="#ffb800"/>
-        <line x1="32" y1="12" x2="32" y2="4" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
+        <line x1="32" y1="12" x2="32" y2="4" stroke="${strokeColor}" stroke-width="3" stroke-linecap="round"/>
         <circle cx="32" cy="4" r="3" fill="#3b82f6" stroke="#93c5fd" stroke-width="1"/>
-        <rect x="14" y="12" width="36" height="34" rx="18" fill="#e2e8f0" stroke="#64748b" stroke-width="3"/>
+        <rect x="14" y="12" width="36" height="34" rx="18" fill="${baseColor}" stroke="${strokeColor}" stroke-width="3"/>
         <rect x="20" y="18" width="24" height="15" rx="5" fill="#0f172a"/>
         ${ledEyes}
-        <path d="M28 41H31.5L32.5 37L33.5 44L34.5 41H36" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-        <path d="M12 28C7 28 6 34 6 34" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
-        <path d="M52 28C57 28 58 34 58 34" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
+        <path d="M28 41H31.5L32.5 37L33.5 44L34.5 41H36" stroke="${pulseColor}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12 28C7 28 6 34 6 34" stroke="${strokeColor}" stroke-width="3" stroke-linecap="round"/>
+        <path d="M52 28C57 28 58 34 58 34" stroke="${strokeColor}" stroke-width="3" stroke-linecap="round"/>
       </svg>
     `;
   }
 
-  private getGatinhoSVG(state: MascotState): string {
+  private getGatinhoSVG(state: MascotState, color: string): string {
     let eyes = '';
     let mouth = '';
 
+    // Configuração de cores do gatinho
+    let baseColor = "#f59e0b"; // Laranja
+    let detailColor = "#d97706";
+    let chestColor = "#fbbf24";
+    let innerEarColor = "#fca5a5";
+
+    if (color === 'cinza') {
+      baseColor = "#94a3b8";
+      detailColor = "#475569";
+      chestColor = "#cbd5e1";
+    } else if (color === 'preto') {
+      baseColor = "#1e293b";
+      detailColor = "#0f172a";
+      chestColor = "#ffffff"; // Mancha branca no peito
+    }
+
     if (state === 'SLEEP') {
       eyes = `
-        <path d="M19 35 Q21 38 23 35" stroke="#1e293b" stroke-width="2"/>
-        <path d="M31 35 Q33 38 35 35" stroke="#1e293b" stroke-width="2"/>
+        <path d="M19 35 Q21 38 23 35" stroke="#1e293b" stroke-width="2" stroke-linecap="round" fill="none"/>
+        <path d="M31 35 Q33 38 35 35" stroke="#1e293b" stroke-width="2" stroke-linecap="round" fill="none"/>
       `;
-      mouth = `<path d="M26 38 Q27 38.5 28 38" stroke="#1e293b" stroke-width="1.2"/>`;
+      mouth = `<path d="M26 38 Q27 38.5 28 38" stroke="#1e293b" stroke-width="1.2" stroke-linecap="round"/>`;
     } 
     else if (state === 'TRIP') {
       eyes = `
-        <path d="M19 32l3 3m0-3l-3 3" stroke="#1e293b" stroke-width="2"/>
-        <path d="M31 32l3 3m0-3l-3 3" stroke="#1e293b" stroke-width="2"/>
+        <path d="M19 32l3 3m0-3l-3 3" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>
+        <path d="M31 32l3 3m0-3l-3 3" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>
       `;
-      mouth = `<path d="M25 38.5c1-1 3-1 4 0" stroke="#1e293b" stroke-width="1.5" fill="none"/>`;
+      mouth = `<path d="M25 38.5c1-1 3-1 4 0" stroke="#1e293b" stroke-width="1.5" fill="none" stroke-linecap="round"/>`;
     }
     else if (state === 'CELEBRATE') {
-      // Olhos grandes brilhando (fofos)
       eyes = `
         <circle cx="21" cy="34" r="3.8" fill="#1e293b"/>
         <circle cx="33" cy="34" r="3.8" fill="#1e293b"/>
@@ -591,13 +668,12 @@ export class MascotRenderer {
     }
     else if (state === 'STRETCH') {
       eyes = `
-        <path d="M19 32l4 2.5l-4 2.5" stroke="#1e293b" stroke-width="2" fill="none"/>
-        <path d="M35 32l-4 2.5l4 2.5" stroke="#1e293b" stroke-width="2" fill="none"/>
+        <path d="M19 32l4 2.5l-4 2.5" stroke="#1e293b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M35 32l-4 2.5l4 2.5" stroke="#1e293b" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
       `;
       mouth = `<circle cx="27" cy="38" r="1.5" fill="#1e293b"/>`;
     }
     else {
-      // Normal
       eyes = `
         <circle cx="21" cy="34" r="3.2" fill="#1e293b"/>
         <circle cx="33" cy="34" r="3.2" fill="#1e293b"/>
@@ -609,23 +685,23 @@ export class MascotRenderer {
 
     return `
       <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M48 48C52 48 56 44 56 38C56 32 53 30 50 30" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round"/>
-        <rect x="18" y="52" width="6" height="8" rx="2" fill="#d97706"/>
-        <rect x="27" y="52" width="6" height="8" rx="2" fill="#d97706"/>
-        <rect x="36" y="52" width="6" height="8" rx="2" fill="#d97706"/>
-        <rect x="12" y="24" width="34" height="30" rx="12" fill="#f59e0b" stroke="#d97706" stroke-width="2.5"/>
-        <rect x="16" y="28" width="26" height="22" rx="8" fill="#fbbf24"/>
-        <path d="M16 25L10 12L22 23Z" fill="#d97706"/>
-        <path d="M38 25L44 12L32 23Z" fill="#d97706"/>
-        <path d="M16 23L13 16L20 22Z" fill="#fca5a5"/>
-        <path d="M38 23L41 16L34 22Z" fill="#fca5a5"/>
+        <path d="M48 48C52 48 56 44 56 38C56 32 53 30 50 30" stroke="${detailColor}" stroke-width="4.5" stroke-linecap="round"/>
+        <rect x="18" y="52" width="6" height="8" rx="2" fill="${detailColor}"/>
+        <rect x="27" y="52" width="6" height="8" rx="2" fill="${detailColor}"/>
+        <rect x="36" y="52" width="6" height="8" rx="2" fill="${detailColor}"/>
+        <rect x="12" y="24" width="34" height="30" rx="12" fill="${baseColor}" stroke="${detailColor}" stroke-width="2.5"/>
+        <rect x="16" y="28" width="26" height="22" rx="8" fill="${chestColor}"/>
+        <path d="M16 25L10 12L22 23Z" fill="${detailColor}"/>
+        <path d="M38 25L44 12L32 23Z" fill="${detailColor}"/>
+        <path d="M16 23L13 16L20 22Z" fill="${innerEarColor}"/>
+        <path d="M38 23L41 16L34 22Z" fill="${innerEarColor}"/>
         ${eyes}
-        <path d="M26 37.5L27 36L28 37.5" stroke="#d97706" stroke-width="1.5" stroke-linecap="round"/>
+        <path d="M26 37.5L27 36L28 37.5" stroke="${detailColor}" stroke-width="1.5" stroke-linecap="round"/>
         ${mouth}
-        <line x1="8" y1="36" x2="16" y2="37" stroke="#92400e" stroke-width="1.5"/>
-        <line x1="8" y1="39" x2="16" y2="39" stroke="#92400e" stroke-width="1.5"/>
-        <line x1="46" y1="36" x2="38" y2="37" stroke="#92400e" stroke-width="1.5"/>
-        <line x1="46" y1="39" x2="38" y2="39" stroke="#92400e" stroke-width="1.5"/>
+        <line x1="8" y1="36" x2="16" y2="37" stroke="${detailColor}" stroke-width="1.5"/>
+        <line x1="8" y1="39" x2="16" y2="39" stroke="${detailColor}" stroke-width="1.5"/>
+        <line x1="46" y1="36" x2="38" y2="37" stroke="${detailColor}" stroke-width="1.5"/>
+        <line x1="46" y1="39" x2="38" y2="39" stroke="${detailColor}" stroke-width="1.5"/>
       </svg>
     `;
   }
