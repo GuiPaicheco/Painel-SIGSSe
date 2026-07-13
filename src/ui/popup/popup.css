@@ -10,7 +10,7 @@ body {
   font-family: 'Inter', sans-serif;
   background-color: #0b0f19;
   color: #f1f5f9;
-  width: 320px;
+  width: 330px;
   overflow: hidden;
 }
 
@@ -130,7 +130,7 @@ input:checked + .slider:before {
   border-radius: 50%;
 }
 
-/* Corpo das Configurações */
+/* Corpo */
 .popup-body {
   display: flex;
   flex-direction: column;
@@ -153,18 +153,18 @@ input:checked + .slider:before {
   margin-bottom: 10px;
 }
 
-/* Seletor de Mascotes */
+/* Seletor de Mascotes (4 colunas) */
 .skin-selector {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 8px;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
 }
 
 .skin-card {
   background-color: #1f2937;
   border: 2px solid transparent;
   border-radius: 8px;
-  padding: 8px;
+  padding: 8px 4px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -197,10 +197,16 @@ input:checked + .slider:before {
   height: 100%;
 }
 
+.mixed-emoji {
+  font-size: 26px;
+}
+
 .skin-name {
-  font-size: 10px;
+  font-size: 9px;
   font-weight: 600;
   color: #cbd5e1;
+  text-align: center;
+  white-space: nowrap;
 }
 
 .skin-card.active .skin-name {
@@ -212,7 +218,7 @@ input:checked + .slider:before {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
 }
 
 .setting-row:last-child {
@@ -328,24 +334,56 @@ input:checked + .slider:before {
   transform: rotate(45deg);
 }
 
+/* Botão Acessar Painel */
+.access-panel-btn {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  width: 100%;
+  padding: 10px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+  transition: all 0.2s ease;
+}
+
+.access-panel-btn:hover {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px -1px rgba(37, 99, 235, 0.35);
+}
+
+.access-panel-btn:active {
+  transform: translateY(0);
+}
+
 /* Rodapé */
 .popup-footer {
   margin-top: 14px;
   border-top: 1px solid #1e293b;
   padding-top: 10px;
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
 }
 
-.footer-version {
-  font-size: 9px;
+.footer-credit {
+  font-size: 9.5px;
   font-weight: 600;
-  color: #475569;
+  color: #64748b;
+  margin-bottom: 4px;
+  text-align: center;
 }
 
-.footer-info {
-  font-size: 9px;
+.footer-version {
+  font-size: 8px;
   font-weight: 500;
-  color: #64748b;
+  color: #475569;
 }

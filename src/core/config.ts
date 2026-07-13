@@ -1,6 +1,7 @@
 export interface MascotSettings {
   mascotEnabled: boolean;
-  mascotSkin: 'gotinha' | 'robozinho' | 'gatinho';
+  mascotSkin: 'gotinha' | 'robozinho' | 'gatinho' | 'mixed';
+  mascotCount: number; // Quantidade de mascotes (1 a 4)
   speedMultiplier: number;
   size: number;
   opacity: number;
@@ -10,6 +11,7 @@ export interface MascotSettings {
 export const DEFAULT_SETTINGS: MascotSettings = {
   mascotEnabled: true,
   mascotSkin: 'gotinha',
+  mascotCount: 1,
   speedMultiplier: 1.0,
   size: 64,
   opacity: 0.9,
@@ -55,5 +57,4 @@ export class MascotConfigManager {
   }
 }
 
-// Tipo alternativo para compatibilidade interna
 type MascSettingsSchema = MascotSettings;

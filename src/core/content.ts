@@ -3,14 +3,17 @@ import { MascotEngine } from '../mascot/MascotEngine';
 import { MascotRenderer, MascotSkinType } from '../mascot/MascotRenderer';
 import { MascotConfigManager } from './config';
 
+interface MascotInstance {
+  engine: MascotEngine;
+  renderer: MascotRenderer;
+}
+
 class SIGSSMascotCore {
-  private engine: MascotEngine | null = null;
-  private renderer: MascotRenderer | null = null;
+  private mascots: MascotInstance[] = [];
   private isRunning = false;
   private observer: MutationObserver | null = null;
 
   public async init() {
-    // 1. Verificar se estamos na página correta do painel
     if (!SigssPanelAdapter.isPanelPage()) {
       console.log('Painel SIGSS+ Mascote: Página atual não identificada como painel de chamadas.');
       return;
@@ -18,33 +21,29 @@ class SIGSSMascotCore {
 
     console.log('Painel SIGSS+ Mascote: Inicializando na página...');
 
-    // 2. Aguardar o carregamento dos elementos cruciais do DOM (necessário em SPAs)
+    // Aguardar o carregamento dos elementos cruciais do DOM
     this.waitForElementsAndStart();
 
-    // 3. Ouvir mudanças de configurações em tempo real
+    // Ouvir mudanças de configurações em tempo real
     this.setupConfigListener();
   }
 
-  /**
-   * Monitora e aguarda até que os elementos do painel estejam presentes para iniciar o motor
-   */
   private waitForElementsAndStart() {
     let attempts = 0;
     const interval = setInterval(async () => {
       attempts++;
       const elements = SigssPanelAdapter.getElements();
       
-      // Se encontrarmos o card de chamada ou o nome do paciente, ou se atingirmos o limite de tentativas
       if (elements.callingCard || elements.patientName || attempts > 30) {
         clearInterval(interval);
-        console.log(`Painel SIGSS+ Mascote: Elementos detectados (tentativas: ${attempts}). Iniciando motor...`);
+        console.log(`Painel SIGSS+ Mascote: Elementos detectados. Iniciando motor...`);
         await this.start();
       }
-    }, 500); // Tenta a cada 500ms
+    }, 500);
   }
 
   /**
-   * Inicia o motor de física do mascote, o loop de animação e o observador de chamadas
+   * Inicia a quantidade configurada de mascotes na tela
    */
   private async start() {
     if (this.isRunning) return;
@@ -57,105 +56,128 @@ class SIGSSMascotCore {
     }
 
     this.isRunning = true;
+    this.mascots = [];
 
-    // Instanciar o motor e o renderizador
-    this.engine = new MascotEngine();
-    this.renderer = new MascotRenderer(this.engine);
+    const count = settings.mascotCount || 1;
+    console.log(`Painel SIGSS+ Mascote: Spawnando ${count} mascote(s)...`);
 
-    // Aplicar configurações iniciais
-    this.engine.updateConfig({
-      speedMultiplier: settings.speedMultiplier,
-      size: settings.size,
-      opacity: settings.opacity,
-      callAwareness: settings.callAwareness
-    });
-    this.renderer.setSkin(settings.mascotSkin);
+    // Array de skins para rodar em modo "misturado" (mixed)
+    const skinsList: MascotSkinType[] = ['gotinha', 'robozinho', 'gatinho'];
 
-    // Acoplar o callback do motor para redesenhar o mascote a cada atualização física
-    this.engine.onUpdate(() => {
-      if (this.renderer) {
-        this.renderer.render();
+    for (let i = 0; i < count; i++) {
+      const engine = new MascotEngine();
+      
+      // Espaçar os mascotes horizontalmente na inicialização para não empilharem
+      engine.x = (window.innerWidth / (count + 1)) * (i + 1) - (settings.size / 2);
+      engine.y = 80; // Solta do topo
+      
+      // Aplicar configurações físicas
+      engine.updateConfig({
+        speedMultiplier: settings.speedMultiplier,
+        size: settings.size,
+        opacity: settings.opacity,
+        callAwareness: settings.callAwareness
+      });
+
+      const renderer = new MascotRenderer(engine);
+
+      // Determinar o visual do mascote atual
+      let activeSkin: MascotSkinType = 'gotinha';
+      if (settings.mascotSkin === 'mixed') {
+        // Escolhe uma skin rotativa para cada índice de mascote
+        activeSkin = skinsList[i % skinsList.length];
+      } else {
+        activeSkin = settings.mascotSkin as MascotSkinType;
       }
-    });
+      renderer.setSkin(activeSkin);
 
-    // Iniciar o loop de animação (hardware accelerated)
+      // Configurar callback de render
+      engine.onUpdate(() => {
+        renderer.render();
+      });
+
+      this.mascots.push({ engine, renderer });
+    }
+
+    // Iniciar loop de animação comum
     this.animationLoop();
 
-    // Configurar o observador do painel para escutar novas chamadas
+    // Configurar observador do painel
     this.setupCallObserver();
   }
 
   /**
-   * Finaliza o motor e remove os elementos visuais da tela
+   * Finaliza todos os motores e limpa os elementos visuais
    */
   private stop() {
     this.isRunning = false;
     
-    if (this.renderer) {
-      this.renderer.destroy();
-      this.renderer = null;
-    }
+    // Destruir renderers
+    this.mascots.forEach(m => {
+      m.renderer.destroy();
+    });
+    this.mascots = [];
 
+    // Desconectar observer
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
     }
 
-    this.engine = null;
-    console.log('Painel SIGSS+ Mascote: Motor parado e elementos removidos.');
+    console.log('Painel SIGSS+ Mascote: Motores parados e todos os mascotes removidos.');
   }
 
   /**
-   * Loop de animação via requestAnimationFrame
+   * Game Loop unificado para todos os mascotes
    */
   private animationLoop = () => {
-    if (!this.isRunning || !this.engine) return;
+    if (!this.isRunning) return;
     
-    this.engine.update();
+    this.mascots.forEach(m => {
+      m.engine.update();
+    });
+    
     requestAnimationFrame(this.animationLoop);
   };
 
   /**
-   * Monitora alterações na div de paciente ativo para simular ou disparar a reação de susto e festa
+   * Escuta novas chamadas e notifica simultaneamente todos os mascotes ativos
    */
   private setupCallObserver() {
     const elements = SigssPanelAdapter.getElements();
     if (!elements.patientName) {
-      console.warn('Painel SIGSS+ Mascote: Elemento de nome de paciente não encontrado. Observer não ativado.');
+      console.warn('Painel SIGSS+ Mascote: Elemento de nome de paciente não encontrado para observer.');
       return;
     }
 
-    // Criar o MutationObserver
     this.observer = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         const text = (elements.patientName?.textContent || '').trim();
-        // Evita reagir a estados vazios ou placeholders como "-"
         if (text && text !== '-' && text.length > 2) {
           const local = elements.localName?.textContent || '';
-          if (this.engine) {
-            this.engine.triggerCallReaction(text, local);
-          }
+          
+          // Dispara a reação em todos os mascotes ativos
+          this.mascots.forEach(m => {
+            m.engine.triggerCallReaction(text, local);
+          });
           break;
         }
       }
     });
 
-    // Observar tanto alterações de conteúdo do texto quanto de elementos filhos
     this.observer.observe(elements.patientName, {
       childList: true,
       characterData: true,
       subtree: true
     });
-
-    console.log('Painel SIGSS+ Mascote: Monitoramento de chamadas ativado via MutationObserver.');
   }
 
   /**
-   * Atualiza as configurações em execução em tempo real sem recarregar a página
+   * Reinicia ou atualiza configurações em tempo real
    */
   private setupConfigListener() {
     MascotConfigManager.onChange((changes) => {
-      // 1. Caso altere a ativação global da extensão
+      // 1. Caso altere a ativação
       if (changes.mascotEnabled) {
         const enabled = changes.mascotEnabled.newValue;
         if (enabled) {
@@ -163,45 +185,52 @@ class SIGSSMascotCore {
         } else {
           this.stop();
         }
+        return;
       }
 
-      // Se a extensão não estiver rodando, não aplica as outras configurações agora
-      if (!this.isRunning || !this.engine || !this.renderer) return;
+      // Se não estiver rodando, ignora as alterações agora
+      if (!this.isRunning) return;
 
-      // 2. Skin / Personagem
-      if (changes.mascotSkin) {
-        this.renderer.setSkin(changes.mascotSkin.newValue as MascotSkinType);
-      }
-
-      // 3. Física e propriedades
-      const updatedConfig: any = {};
-      let hasConfigUpdate = false;
-
-      if (changes.speedMultiplier) {
-        updatedConfig.speedMultiplier = changes.speedMultiplier.newValue;
-        hasConfigUpdate = true;
-      }
-      if (changes.size) {
-        updatedConfig.size = changes.size.newValue;
-        hasConfigUpdate = true;
-      }
-      if (changes.opacity) {
-        updatedConfig.opacity = changes.opacity.newValue;
-        hasConfigUpdate = true;
-      }
-      if (changes.callAwareness) {
-        updatedConfig.callAwareness = changes.callAwareness.newValue;
-        hasConfigUpdate = true;
+      // 2. Para alterações estruturais (quantidade ou tipo de skin), reiniciamos o motor
+      const hasStructureChanges = changes.mascotCount || changes.mascotSkin;
+      
+      if (hasStructureChanges) {
+        console.log('Painel SIGSS+ Mascote: Alterações estruturais salvas. Reiniciando mascotes...');
+        this.stop();
+        this.start();
+        return;
       }
 
-      if (hasConfigUpdate) {
-        this.engine.updateConfig(updatedConfig);
-      }
+      // 3. Para ajustes finos dinâmicos (tamanho, velocidade, opacidade, chamada), aplicamos sem reiniciar
+      this.mascots.forEach(m => {
+        const updatedConfig: any = {};
+        let hasConfigUpdate = false;
+
+        if (changes.speedMultiplier) {
+          updatedConfig.speedMultiplier = changes.speedMultiplier.newValue;
+          hasConfigUpdate = true;
+        }
+        if (changes.size) {
+          updatedConfig.size = changes.size.newValue;
+          hasConfigUpdate = true;
+        }
+        if (changes.opacity) {
+          updatedConfig.opacity = changes.opacity.newValue;
+          hasConfigUpdate = true;
+        }
+        if (changes.callAwareness) {
+          updatedConfig.callAwareness = changes.callAwareness.newValue;
+          hasConfigUpdate = true;
+        }
+
+        if (hasConfigUpdate) {
+          m.engine.updateConfig(updatedConfig);
+        }
+      });
     });
   }
 }
 
-// Inicializar ponto de entrada
 const core = new SIGSSMascotCore();
 core.init().catch(err => {
   console.error('Painel SIGSS+ Mascote: Falha na inicialização do Core:', err);

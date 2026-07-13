@@ -42,7 +42,7 @@ export class MascotEngine {
   private normalSpeed = 1.1;
   private runSpeed = 2.6;
   private climbSpeed = 0.9;
-  private inertia = 0.15; // Fator de inércia para movimento suave (0.1 = muito suave, 1.0 = instantâneo)
+  private inertia = 0.15; // Fator de inércia para movimento suave
 
   // Ciclo de comportamento
   private nextStateTime = 0;
@@ -64,7 +64,7 @@ export class MascotEngine {
   }
 
   public resetToSafety() {
-    this.x = window.innerWidth / 2;
+    this.x = Math.random() * (window.innerWidth - 100) + 50;
     this.y = 50;
     this.vx = 0;
     this.vy = 2;
@@ -109,6 +109,20 @@ export class MascotEngine {
     // Atualizar dados de contexto do painel em tempo real
     this.updateContextData();
 
+    // Se estiver celebrando chamada, o comportamento é prioritário e ignora outras ações temporárias
+    if (this.isCelebrating) {
+      if (now > this.celebrationEndTime) {
+        this.isCelebrating = false;
+        this.state = 'IDLE';
+        this.nextStateTime = now + 2000;
+        this.targetVx = 0;
+        return;
+      }
+
+      this.executeCelebrationBehavior();
+      return;
+    }
+
     // 1. Tratamento do Estado Especial: Tropeçar (Trip)
     if (this.state === 'TRIP') {
       if (now > this.actionEndTime) {
@@ -129,29 +143,12 @@ export class MascotEngine {
       return;
     }
 
-    // 3. Tratamento de Comemoração de Nova Chamada
-    if (this.isCelebrating) {
-      if (now > this.celebrationEndTime) {
-        this.isCelebrating = false;
-        this.state = 'IDLE';
-        this.nextStateTime = now + 2000;
-        this.targetVx = 0;
-        return;
-      }
-
-      this.executeCelebrationBehavior();
-      return;
-    }
-
-    // 4. Comportamento aleatório normal baseado em tempo
+    // 3. Comportamento aleatório normal baseado em tempo
     if (now > this.nextStateTime) {
       this.decideNextState(now);
     }
   }
 
-  /**
-   * Mantém o mascote atualizado sobre o nome do paciente ativo e horas do relógio
-   */
   private updateContextData() {
     const elements = SigssPanelAdapter.getElements();
     if (elements.patientName) {
@@ -247,7 +244,6 @@ export class MascotEngine {
       // Tropeçar (Trip) - Raro e engraçado
       this.state = 'TRIP';
       this.actionEndTime = now + 2000;
-      // Empurra o boneco um pouco na direção atual para simular escorregão
       this.targetVx = (this.direction === 'RIGHT' ? this.normalSpeed : -this.normalSpeed) * 0.7;
     }
     else if (rand < 0.45) {
@@ -295,7 +291,6 @@ export class MascotEngine {
         // Pulo em cima de um obstáculo próximo
         this.state = 'JUMP';
         this.vy = this.jumpForce * 1.1;
-        // Pula na direção do centro da tela para tentar subir no box
         const centerDir = this.x < window.innerWidth / 2 ? 1 : -1;
         this.targetVx = centerDir * this.normalSpeed * 1.8 * this.config.speedMultiplier;
       }
@@ -303,7 +298,7 @@ export class MascotEngine {
   }
 
   /**
-   * Dispara a comemoração de chamada de paciente
+   * Dispara a comemoração de chamada de paciente de forma imediata
    */
   public triggerCallReaction(patientName: string, local: string) {
     if (!this.config.callAwareness) return;
@@ -321,16 +316,20 @@ export class MascotEngine {
     }
 
     this.isCelebrating = true;
-    this.state = 'RUN';
     this.celebrationEndTime = Date.now() + 10000; // Comemora por 10 segundos
     
-    // Pequeno pulo de susto se estiver assentado
-    const floor = this.getFloorLevelAt(this.x);
-    if (this.y >= floor - 5) {
-      this.vy = this.jumpForce * 0.9;
-      this.state = 'JUMP';
-      this.targetVx = (this.celebrationTargetX > this.x ? this.runSpeed : -this.runSpeed) * 0.5;
-    }
+    // Força o cancelamento imediato de sonos, tropeços ou alongamentos
+    this.actionEndTime = 0;
+    
+    // Grande pulo de susto inicial e ativa estado de pulo/corrida
+    this.vy = this.jumpForce * 1.1;
+    this.state = 'JUMP';
+    
+    // Vira de frente para a chamada e dá impulso horizontal imediato
+    const dx = this.celebrationTargetX - (this.x + this.width / 2);
+    this.direction = dx > 0 ? 'RIGHT' : 'LEFT';
+    this.targetVx = (dx > 0 ? this.runSpeed : -this.runSpeed) * this.config.speedMultiplier;
+    this.vx = this.targetVx * 0.8;
   }
 
   /**
@@ -341,14 +340,12 @@ export class MascotEngine {
     if (this.state === 'CLIMB') {
       this.y += this.vy;
       
-      // Solta da parede no topo da tela
       if (this.y < 0) {
         this.y = 0;
         this.state = 'IDLE';
         this.vy = 0;
       }
       
-      // Chegou no chão, para de escalar
       const floor = this.getFloorLevelAt(this.x);
       if (this.y >= floor) {
         this.y = floor;
@@ -359,7 +356,6 @@ export class MascotEngine {
     }
 
     // 2. Aplicação de Inércia Horizontal (Aceleração suave)
-    // Se tropeçar, a velocidade cai lentamente no chão simulando atrito
     if (this.state === 'TRIP') {
       this.vx += (0 - this.vx) * 0.08;
     } else {
@@ -376,11 +372,11 @@ export class MascotEngine {
       }
     }
 
-    // 4. Atualização das coordenadas de acordo com as velocidades
+    // 4. Atualização das coordenadas
     this.x += this.vx;
     this.y += this.vy;
 
-    // 5. Colisão Lateral Inteligente (Bate e vira / quica)
+    // 5. Colisão Lateral
     if (this.x < 0) {
       this.x = 0;
       this.vx = -this.vx * 0.4;
@@ -402,22 +398,20 @@ export class MascotEngine {
       
       if (isLanding) {
         this.targetVx = 0;
-        this.vx = this.vx * 0.3; // Desacelera ao aterrissar
+        this.vx = this.vx * 0.3;
         this.state = 'IDLE';
-        this.nextStateTime = Date.now() + 800; // Espera um pouquinho ao cair
+        this.nextStateTime = Date.now() + 800;
       }
     }
   }
 
   /**
    * Retorna a coordenada Y do "chão" na posição X.
-   * O mascote pode pousar e andar no topo do card principal e da barra lateral de histórico.
    */
   private getFloorLevelAt(x: number): number {
     const elements = SigssPanelAdapter.getElements();
     const mascotCenterX = x + this.width / 2;
 
-    // Chão padrão é o rodapé do painel (se houver) ou a base da janela
     let defaultFloor = window.innerHeight - this.height;
     if (elements.footerTicker) {
       const footerRect = elements.footerTicker.getBoundingClientRect();
@@ -428,7 +422,6 @@ export class MascotEngine {
     if (elements.historySection) {
       const histRect = elements.historySection.getBoundingClientRect();
       if (mascotCenterX >= histRect.left && mascotCenterX <= histRect.right) {
-        // Pousa se vier por cima (com tolerância de 18px)
         if (this.y + this.height <= histRect.top + 18 && this.vy >= 0) {
           return histRect.top - this.height;
         }
@@ -439,7 +432,6 @@ export class MascotEngine {
     if (elements.callingCard) {
       const cardRect = elements.callingCard.getBoundingClientRect();
       if (mascotCenterX >= cardRect.left && mascotCenterX <= cardRect.right) {
-        // Pousa se vier por cima (com tolerância de 18px)
         if (this.y + this.height <= cardRect.top + 18 && this.vy >= 0) {
           return cardRect.top - this.height;
         }

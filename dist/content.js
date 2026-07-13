@@ -97,7 +97,7 @@
     runSpeed = 2.6;
     climbSpeed = 0.9;
     inertia = 0.15;
-    // Fator de inércia para movimento suave (0.1 = muito suave, 1.0 = instantâneo)
+    // Fator de inércia para movimento suave
     // Ciclo de comportamento
     nextStateTime = 0;
     actionEndTime = 0;
@@ -115,7 +115,7 @@
       this.resetToSafety();
     }
     resetToSafety() {
-      this.x = window.innerWidth / 2;
+      this.x = Math.random() * (window.innerWidth - 100) + 50;
       this.y = 50;
       this.vx = 0;
       this.vy = 2;
@@ -151,6 +151,17 @@
     applyBehavior() {
       const now = Date.now();
       this.updateContextData();
+      if (this.isCelebrating) {
+        if (now > this.celebrationEndTime) {
+          this.isCelebrating = false;
+          this.state = "IDLE";
+          this.nextStateTime = now + 2e3;
+          this.targetVx = 0;
+          return;
+        }
+        this.executeCelebrationBehavior();
+        return;
+      }
       if (this.state === "TRIP") {
         if (now > this.actionEndTime) {
           this.state = "IDLE";
@@ -167,24 +178,10 @@
         }
         return;
       }
-      if (this.isCelebrating) {
-        if (now > this.celebrationEndTime) {
-          this.isCelebrating = false;
-          this.state = "IDLE";
-          this.nextStateTime = now + 2e3;
-          this.targetVx = 0;
-          return;
-        }
-        this.executeCelebrationBehavior();
-        return;
-      }
       if (now > this.nextStateTime) {
         this.decideNextState(now);
       }
     }
-    /**
-     * Mantém o mascote atualizado sobre o nome do paciente ativo e horas do relógio
-     */
     updateContextData() {
       const elements = SigssPanelAdapter.getElements();
       if (elements.patientName) {
@@ -298,7 +295,7 @@
       }
     }
     /**
-     * Dispara a comemoração de chamada de paciente
+     * Dispara a comemoração de chamada de paciente de forma imediata
      */
     triggerCallReaction(patientName, local) {
       if (!this.config.callAwareness) return;
@@ -313,14 +310,14 @@
         this.celebrationTargetY = window.innerHeight / 2;
       }
       this.isCelebrating = true;
-      this.state = "RUN";
       this.celebrationEndTime = Date.now() + 1e4;
-      const floor = this.getFloorLevelAt(this.x);
-      if (this.y >= floor - 5) {
-        this.vy = this.jumpForce * 0.9;
-        this.state = "JUMP";
-        this.targetVx = (this.celebrationTargetX > this.x ? this.runSpeed : -this.runSpeed) * 0.5;
-      }
+      this.actionEndTime = 0;
+      this.vy = this.jumpForce * 1.1;
+      this.state = "JUMP";
+      const dx = this.celebrationTargetX - (this.x + this.width / 2);
+      this.direction = dx > 0 ? "RIGHT" : "LEFT";
+      this.targetVx = (dx > 0 ? this.runSpeed : -this.runSpeed) * this.config.speedMultiplier;
+      this.vx = this.targetVx * 0.8;
     }
     /**
      * Aplica física com aceleração e desaceleração linear para movimentos orgânicos
@@ -381,7 +378,6 @@
     }
     /**
      * Retorna a coordenada Y do "chão" na posição X.
-     * O mascote pode pousar e andar no topo do card principal e da barra lateral de histórico.
      */
     getFloorLevelAt(x) {
       const elements = SigssPanelAdapter.getElements();
@@ -420,31 +416,38 @@
     currentSkin = "gotinha";
     lastTipTime = 0;
     activeBubbleContent = "";
-    // Dicas e falas normais (humanizadas e simpáticas)
+    // Biblioteca ampliada de falas humanizadas, calmas e referências ao criador
     normalSpeeches = [
-      "T\xF4 de olho nessa fila... \u{1F9D0}",
-      "J\xE1 bebeu \xE1gua hoje? Tem bebedouro ali! \u{1F4A7}",
-      "Estica as pernas um pouquinho! \u{1F6B6}\u200D\u2642\uFE0F",
+      // Calmaria e Acolhimento
+      "Aguarde pacientemente. Todos ser\xE3o atendidos com carinho! \u{1F64F}",
+      "Respire fundo. A equipe da UBS trabalha para cuidar bem de voc\xEA. \u{1F499}",
+      "Seu bem-estar \xE9 nossa prioridade. Obrigado por aguardar! \u{1F3E5}",
+      "A pressa \xE9 inimiga da sa\xFAde. Aguarde seu chamado com tranquilidade! \u{1F60A}",
+      "Cada atendimento leva o tempo necess\xE1rio para um cuidado de qualidade. \u{1FA7A}",
+      "Aproveite para relaxar um pouco enquanto aguarda. \u{1F9D8}\u200D\u2642\uFE0F",
+      // Saúde Preventiva e Dicas
+      "J\xE1 bebeu \xE1gua hoje? Tem bebedouro ali pertinho! \u{1F4A7}",
+      "Estica as pernas um pouquinho se estiver sentado h\xE1 muito tempo! \u{1F6B6}\u200D\u2642\uFE0F",
       "Sabia que o SUS \xE9 o maior sistema p\xFAblico de sa\xFAde gratuito do mundo? \u{1F1E7}\u{1F1F7}",
-      "Por favor, n\xE3o esque\xE7a seus documentos quando for chamado! \u{1FAAA}",
-      "Que dia produtivo aqui na UBS! \u{1FA7A}",
-      "Quem trouxe o cart\xE3o do SUS levantando a m\xE3o! \u{1F4B3}",
-      "Lavar as m\xE3os salva vidas, viu? \u{1F9FC}",
-      "Mantenha a postura sentada nessa cadeira! \u{1F9D8}\u200D\u2642\uFE0F",
-      "Alimenta\xE7\xE3o saud\xE1vel \xE9 o melhor rem\xE9dio. Coma frutas! \u{1F34E}",
-      "Se tossir ou espirrar, use o bra\xE7o para cobrir! \u{1F927}",
-      "A vacina protege voc\xEA e quem voc\xEA ama. Vacine-se! \u{1F489}"
+      "Por favor, n\xE3o esque\xE7a seus documentos e pertences ao ser chamado! \u{1FAAA}",
+      "Lavar as m\xE3os com \xE1gua e sab\xE3o salva vidas, viu? \u{1F9FC}",
+      "Alimenta\xE7\xE3o colorida \xE9 sa\xFAde garantida. Coma frutas e verduras! \u{1F34E}",
+      "Se estiver tossindo ou espirrando, use o cotovelo para cobrir! \u{1F927}",
+      "Mantenha sua caderneta de vacina\xE7\xE3o sempre atualizada! \u{1F489}",
+      // Referências ao Desenvolvedor (Guilherme Paicheco Ferreira)
+      "Sabia que foi o Guilherme Paicheco que me programou? Ele \xE9 fera! \u{1F4BB}",
+      "Processando... Engenheiro de Software detectado: Guilherme Paicheco Ferreira! \u{1F916}",
+      "Miau! O Guilherme me deu vida para passear por este painel. \u{1F43E}",
+      "Olha s\xF3, o Guilherme Paicheco Ferreira me criou para trazer alegria a voc\xEAs! \u{1F3A8}",
+      "Estou aqui vigiando o painel que o Guilherme ajudou a melhorar! \u{1F9D0}"
     ];
-    // Falas de tropeço (divertidas)
     tripSpeeches = [
       "Ops! Quem deixou esse degrau virtual aqui? \u{1F915}",
       "A\xED! Que escorregada... \u{1F605}",
       "Cuidado com o ch\xE3o liso! \u{1F9FC}",
-      "Minha f\xEDsica deu tilt! \u{1F916}",
       "Tropecei no rodap\xE9 do painel! \u{1FAE3}",
       "Estou bem! Ningu\xE9m viu, n\xE9? \u{1F440}"
     ];
-    // Falas de alongamento
     stretchSpeeches = [
       "Alongando... Estica bem as costas! \u{1F9D8}\u200D\u2642\uFE0F",
       "Uh! Que pregui\xE7a boa...",
@@ -456,7 +459,7 @@
       this.injectStyles();
       this.createMascotElements();
       this.setSkin("gotinha");
-      this.lastTipTime = Date.now() - 1e4;
+      this.lastTipTime = Date.now() - 25e3;
     }
     destroy() {
       if (this.containerEl && this.containerEl.parentNode) {
@@ -465,16 +468,23 @@
     }
     setSkin(skin) {
       this.currentSkin = skin;
+      this.updateSVG();
+    }
+    /**
+     * Atualiza o conteúdo do SVG de acordo com a skin e o estado atual
+     */
+    updateSVG() {
       if (!this.spriteEl) return;
-      switch (skin) {
+      const state = this.engine.state;
+      switch (this.currentSkin) {
         case "gotinha":
-          this.spriteEl.innerHTML = this.getGotinhaSVG();
+          this.spriteEl.innerHTML = this.getGotinhaSVG(state);
           break;
         case "robozinho":
-          this.spriteEl.innerHTML = this.getRobozinhoSVG();
+          this.spriteEl.innerHTML = this.getRobozinhoSVG(state);
           break;
         case "gatinho":
-          this.spriteEl.innerHTML = this.getGatinhoSVG();
+          this.spriteEl.innerHTML = this.getGatinhoSVG(state);
           break;
       }
     }
@@ -489,11 +499,13 @@
       this.containerEl.style.width = `${this.engine.width}px`;
       this.containerEl.style.height = `${this.engine.height}px`;
       this.containerEl.style.opacity = `${config.opacity}`;
+      this.updateSVG();
       this.spriteEl.className = `sigss-mascot-sprite sigss-skin-${this.currentSkin} state-${this.engine.state.toLowerCase()} dir-${this.engine.direction.toLowerCase()}`;
       this.updateBalloon(config.callAwareness);
     }
     /**
-     * Lógica avançada de geração de falas de acordo com a posição e ações do mascote
+     * Controla a exibição de balões.
+     * As falas normais agora ocorrem a cada 45 segundos e ficam na tela por 7 segundos.
      */
     updateBalloon(callAwareness) {
       if (!this.balloonEl) return;
@@ -510,7 +522,7 @@
       }
       if (this.engine.state === "SLEEP") {
         const sleepWords = ["Zzz...", "*Sonhando com vacinas...*", "Mais 5 minutinhos... \u{1F4A4}", "Recarregando as baterias... \u{1F50B}"];
-        const index = Math.floor(now / 3500 % sleepWords.length);
+        const index = Math.floor(now / 4e3 % sleepWords.length);
         this.setBalloonText(sleepWords[index], false);
         return;
       }
@@ -530,7 +542,7 @@
       }
       if (this.engine.state === "IDLE" || this.engine.state === "WALK") {
         const timeSinceLastTip = now - this.lastTipTime;
-        if (timeSinceLastTip > 18e3) {
+        if (timeSinceLastTip > 45e3) {
           let chosenSpeech = "";
           if (this.engine.y < 120 && this.engine.lastAnnouncedHour >= 0) {
             const hr = this.engine.lastAnnouncedHour;
@@ -548,7 +560,7 @@
           }
           this.setBalloonText(chosenSpeech, false);
           this.lastTipTime = now;
-        } else if (timeSinceLastTip > 6500 && this.balloonEl.classList.contains("visible") && !this.balloonEl.classList.contains("important-balloon")) {
+        } else if (timeSinceLastTip > 7e3 && this.balloonEl.classList.contains("visible") && !this.balloonEl.classList.contains("important-balloon")) {
           this.balloonEl.classList.remove("visible");
           this.activeBubbleContent = "";
         }
@@ -614,12 +626,10 @@
         overflow: visible;
       }
 
-      /* Dire\xE7\xE3o Horizontal */
       .sigss-mascot-sprite.dir-left {
         transform: scaleX(-1);
       }
 
-      /* Bal\xE3o de di\xE1logo premium */
       .sigss-mascot-balloon {
         position: absolute;
         bottom: 105%;
@@ -656,7 +666,6 @@
         transform: translateY(0) scale(1);
       }
 
-      /* Alerta especial de chamada importante */
       .sigss-mascot-balloon.important-balloon {
         background-color: #dc2626;
         border-color: #f87171;
@@ -681,7 +690,6 @@
          ANIMA\xC7\xD5ES DOS ESTADOS DO MASCOTE (CSS KEYFRAMES)
          ========================================================================== */
       
-      /* 1. IDLE (Respira\xE7\xE3o com balan\xE7o sutil) */
       .state-idle svg {
         animation: mascotBreath 1.8s ease-in-out infinite;
       }
@@ -691,7 +699,6 @@
         50% { transform: translateY(1.5px) scaleY(0.95) scaleX(1.03); }
       }
 
-      /* 2. WALK (Ginga horizontal) */
       .state-walk svg {
         animation: mascotWalk 0.55s ease-in-out infinite;
       }
@@ -703,7 +710,6 @@
         75% { transform: translateY(-4px) rotate(5deg); }
       }
 
-      /* 3. RUN (Passadas r\xE1pidas e pulos curtos) */
       .state-run svg {
         animation: mascotRun 0.3s linear infinite;
       }
@@ -713,7 +719,6 @@
         50% { transform: translateY(-6px) scaleY(0.88) rotate(6deg); }
       }
 
-      /* 4. SLEEP (Pregui\xE7a, rotacionado deitado) */
       .state-sleep {
         transform: rotate(90deg) translateY(12px) !important;
       }
@@ -731,17 +736,14 @@
         50% { transform: scaleX(0.94) scaleY(0.94); opacity: 0.98; }
       }
 
-      /* 5. JUMP (Alongado no ar) */
       .state-jump svg {
         transform: scaleY(1.18) scaleX(0.85);
       }
 
-      /* 6. FALL (Pressionado ao cair) */
       .state-fall svg {
         transform: scaleY(0.85) scaleX(1.15);
       }
 
-      /* 7. CLIMB (Balan\xE7o vertical ao subir escadas/laterais) */
       .state-climb svg {
         animation: mascotClimb 0.45s linear infinite;
       }
@@ -751,7 +753,6 @@
         50% { transform: translateY(-3px) scaleX(0.9) scaleY(1.1); }
       }
 
-      /* 8. CELEBRATE (Giro mortal 360 no ar) */
       .state-celebrate svg {
         animation: mascotCelebrate 0.45s ease-in-out infinite;
       }
@@ -762,7 +763,6 @@
         100% { transform: translateY(0) rotate(360deg); }
       }
 
-      /* 9. TRIP (Trope\xE7o: Deita de cara no ch\xE3o e treme levemente) */
       .state-trip {
         transform: rotate(85deg) translateY(15px) !important;
       }
@@ -777,7 +777,6 @@
         to { transform: translateX(1px) translateY(1px); }
       }
 
-      /* 10. STRETCH (Estica muito pra cima e depois relaxa) */
       .state-stretch svg {
         animation: mascotStretch 2.2s ease-in-out infinite;
       }
@@ -789,9 +788,47 @@
       (document.head || document.documentElement).appendChild(style);
     }
     // ==========================================================================
-    // VETORES SVG DOS PERSONAGENS (Desenhos dinâmicos via código)
+    // VETORES SVG COM EXPRESSÕES FACIAIS DINÂMICAS DE ACORDO COM O ESTADO
     // ==========================================================================
-    getGotinhaSVG() {
+    getGotinhaSVG(state) {
+      let eyes = "";
+      let mouth = "";
+      if (state === "SLEEP") {
+        eyes = `
+        <path d="M21 34 Q24 37 27 34" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+        <path d="M37 34 Q40 37 43 34" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+      `;
+        mouth = `<path d="M30 39h4" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>`;
+      } else if (state === "TRIP") {
+        eyes = `
+        <path d="M22 31l5 5M27 31l-5 5" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M37 31l5 5M42 31l-5 5" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
+      `;
+        mouth = `<path d="M29 39.5c1-1.5 2-1.5 3 0s2 1.5 3 0" stroke="#1e293b" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+      } else if (state === "CELEBRATE") {
+        eyes = `
+        <path d="M21 34l3-3.5l3 3.5" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M37 34l3-3.5l3 3.5" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      `;
+        mouth = `
+        <path d="M28 37.5c1 4 7 4 8 0Z" fill="#ef4444" stroke="#1e293b" stroke-width="1.5"/>
+        <path d="M29 38h6" stroke="#ffffff" stroke-width="1"/>
+      `;
+      } else if (state === "STRETCH") {
+        eyes = `
+        <path d="M21 31l5 3l-5 3" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        <path d="M43 31l-5 3l5 3" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      `;
+        mouth = `<circle cx="32" cy="38" r="2" fill="#1e293b"/>`;
+      } else {
+        eyes = `
+        <circle cx="25" cy="33" r="3.5" fill="#1e293b"/>
+        <circle cx="39" cy="33" r="3.5" fill="#1e293b"/>
+        <circle cx="26.5" cy="31.5" r="1.2" fill="#ffffff"/>
+        <circle cx="40.5" cy="31.5" r="1.2" fill="#ffffff"/>
+      `;
+        mouth = `<path d="M29 37.5C29.5 39 34.5 39 35 37.5" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>`;
+      }
       return `
       <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
         <ellipse cx="22" cy="58" rx="7" ry="4" fill="#3b82f6"/>
@@ -801,19 +838,43 @@
         <path d="M16 43.5C21 47 43 47 48 43.5C48 43.5 45 54 32 54C19 54 16 43.5 16 43.5Z" fill="#60a5fa" opacity="0.85"/>
         <rect x="30" y="47" width="4" height="6" fill="#2563eb" rx="1"/>
         <rect x="29" y="49" width="6" height="2" fill="#2563eb" rx="1"/>
-        <circle cx="25" cy="33" r="3.5" fill="#1e293b"/>
-        <circle cx="39" cy="33" r="3.5" fill="#1e293b"/>
-        <circle cx="26.5" cy="31.5" r="1.2" fill="#ffffff"/>
-        <circle cx="40.5" cy="31.5" r="1.2" fill="#ffffff"/>
+        ${eyes}
         <ellipse cx="20" cy="36.5" rx="2.5" ry="1.5" fill="#fca5a5" opacity="0.6"/>
         <ellipse cx="44" cy="36.5" rx="2.5" ry="1.5" fill="#fca5a5" opacity="0.6"/>
-        <path d="M29 37.5C29.5 39 34.5 39 35 37.5" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>
+        ${mouth}
         <path d="M13 38C8 36 6 32 6 32" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
         <path d="M51 38C56 36 58 32 58 32" stroke="#3b82f6" stroke-width="3" stroke-linecap="round"/>
       </svg>
     `;
     }
-    getRobozinhoSVG() {
+    getRobozinhoSVG(state) {
+      let ledEyes = "";
+      if (state === "SLEEP") {
+        ledEyes = `
+        <line x1="23" y1="25" x2="28" y2="25" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+        <line x1="36" y1="25" x2="41" y2="25" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
+      `;
+      } else if (state === "TRIP") {
+        ledEyes = `
+        <path d="M23 22l4 4M27 22l-4 4" stroke="#f87171" stroke-width="2" stroke-linecap="round"/>
+        <path d="M37 22l4 4M41 22l-4 4" stroke="#f87171" stroke-width="2" stroke-linecap="round"/>
+      `;
+      } else if (state === "CELEBRATE") {
+        ledEyes = `
+        <path d="M22 23.5c.3-1 .8-1 1 0l1 1.5l1-1.5c.2-1 .7-1 1 0v.5l-2.5 3.5l-2.5-3.5v-.5Z" fill="#ef4444"/>
+        <path d="M36 23.5c.3-1 .8-1 1 0l1 1.5l1-1.5c.2-1 .7-1 1 0v.5l-2.5 3.5l-2.5-3.5v-.5Z" fill="#ef4444"/>
+      `;
+      } else if (state === "STRETCH") {
+        ledEyes = `
+        <path d="M23 26l2.5-3.5l2.5 3.5" stroke="#38bdf8" stroke-width="2" fill="none"/>
+        <path d="M36 26l2.5-3.5l2.5 3.5" stroke="#38bdf8" stroke-width="2" fill="none"/>
+      `;
+      } else {
+        ledEyes = `
+        <rect x="24" y="23" width="4" height="5" rx="1.5" fill="#38bdf8"/>
+        <rect x="36" y="23" width="4" height="5" rx="1.5" fill="#38bdf8"/>
+      `;
+      }
       return `
       <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M32 58C32 58 27 50 32 46C37 50 32 58 32 58Z" fill="#ff7e00" opacity="0.8"/>
@@ -822,15 +883,53 @@
         <circle cx="32" cy="4" r="3" fill="#3b82f6" stroke="#93c5fd" stroke-width="1"/>
         <rect x="14" y="12" width="36" height="34" rx="18" fill="#e2e8f0" stroke="#64748b" stroke-width="3"/>
         <rect x="20" y="18" width="24" height="15" rx="5" fill="#0f172a"/>
-        <rect class="bot-eye" x="24" y="23" width="4" height="5" rx="1.5" fill="#38bdf8"/>
-        <rect class="bot-eye" x="36" y="23" width="4" height="5" rx="1.5" fill="#38bdf8"/>
+        ${ledEyes}
         <path d="M28 41H31.5L32.5 37L33.5 44L34.5 41H36" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
         <path d="M12 28C7 28 6 34 6 34" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
         <path d="M52 28C57 28 58 34 58 34" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
       </svg>
     `;
     }
-    getGatinhoSVG() {
+    getGatinhoSVG(state) {
+      let eyes = "";
+      let mouth = "";
+      if (state === "SLEEP") {
+        eyes = `
+        <path d="M19 35 Q21 38 23 35" stroke="#1e293b" stroke-width="2"/>
+        <path d="M31 35 Q33 38 35 35" stroke="#1e293b" stroke-width="2"/>
+      `;
+        mouth = `<path d="M26 38 Q27 38.5 28 38" stroke="#1e293b" stroke-width="1.2"/>`;
+      } else if (state === "TRIP") {
+        eyes = `
+        <path d="M19 32l3 3m0-3l-3 3" stroke="#1e293b" stroke-width="2"/>
+        <path d="M31 32l3 3m0-3l-3 3" stroke="#1e293b" stroke-width="2"/>
+      `;
+        mouth = `<path d="M25 38.5c1-1 3-1 4 0" stroke="#1e293b" stroke-width="1.5" fill="none"/>`;
+      } else if (state === "CELEBRATE") {
+        eyes = `
+        <circle cx="21" cy="34" r="3.8" fill="#1e293b"/>
+        <circle cx="33" cy="34" r="3.8" fill="#1e293b"/>
+        <circle cx="22.5" cy="32.5" r="1.5" fill="#ffffff"/>
+        <circle cx="34.5" cy="32.5" r="1.5" fill="#ffffff"/>
+        <circle cx="19.5" cy="35.5" r="0.8" fill="#ffffff"/>
+        <circle cx="31.5" cy="35.5" r="0.8" fill="#ffffff"/>
+      `;
+        mouth = `<path d="M24 38c.5 1 1.5 1.5 2.5 1.5s2-.5 2.5-1.5" fill="#ef4444" stroke="#1e293b" stroke-width="1.5" stroke-linecap="round"/>`;
+      } else if (state === "STRETCH") {
+        eyes = `
+        <path d="M19 32l4 2.5l-4 2.5" stroke="#1e293b" stroke-width="2" fill="none"/>
+        <path d="M35 32l-4 2.5l4 2.5" stroke="#1e293b" stroke-width="2" fill="none"/>
+      `;
+        mouth = `<circle cx="27" cy="38" r="1.5" fill="#1e293b"/>`;
+      } else {
+        eyes = `
+        <circle cx="21" cy="34" r="3.2" fill="#1e293b"/>
+        <circle cx="33" cy="34" r="3.2" fill="#1e293b"/>
+        <circle cx="22" cy="32.8" r="1" fill="#ffffff"/>
+        <circle cx="34" cy="32.8" r="1" fill="#ffffff"/>
+      `;
+        mouth = `<path d="M25 39C25.5 39.8 27 39.8 27 39M27 39C27 39.8 28.5 39.8 29 39" stroke="#1e293b" stroke-width="1.5" stroke-linecap="round"/>`;
+      }
       return `
       <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M48 48C52 48 56 44 56 38C56 32 53 30 50 30" stroke="#f59e0b" stroke-width="4.5" stroke-linecap="round"/>
@@ -843,12 +942,9 @@
         <path d="M38 25L44 12L32 23Z" fill="#d97706"/>
         <path d="M16 23L13 16L20 22Z" fill="#fca5a5"/>
         <path d="M38 23L41 16L34 22Z" fill="#fca5a5"/>
-        <circle cx="21" cy="34" r="3.2" fill="#1e293b"/>
-        <circle cx="33" cy="34" r="3.2" fill="#1e293b"/>
-        <circle cx="22" cy="32.8" r="1" fill="#ffffff"/>
-        <circle cx="34" cy="32.8" r="1" fill="#ffffff"/>
+        ${eyes}
         <path d="M26 37.5L27 36L28 37.5" stroke="#d97706" stroke-width="1.5" stroke-linecap="round"/>
-        <path d="M25 39C25.5 39.8 27 39.8 27 39M27 39C27 39.8 28.5 39.8 29 39" stroke="#1e293b" stroke-width="1.5" stroke-linecap="round"/>
+        ${mouth}
         <line x1="8" y1="36" x2="16" y2="37" stroke="#92400e" stroke-width="1.5"/>
         <line x1="8" y1="39" x2="16" y2="39" stroke="#92400e" stroke-width="1.5"/>
         <line x1="46" y1="36" x2="38" y2="37" stroke="#92400e" stroke-width="1.5"/>
@@ -862,6 +958,7 @@
   var DEFAULT_SETTINGS = {
     mascotEnabled: true,
     mascotSkin: "gotinha",
+    mascotCount: 1,
     speedMultiplier: 1,
     size: 64,
     opacity: 0.9,
@@ -905,8 +1002,7 @@
 
   // src/core/content.ts
   var SIGSSMascotCore = class {
-    engine = null;
-    renderer = null;
+    mascots = [];
     isRunning = false;
     observer = null;
     async init() {
@@ -918,9 +1014,6 @@
       this.waitForElementsAndStart();
       this.setupConfigListener();
     }
-    /**
-     * Monitora e aguarda até que os elementos do painel estejam presentes para iniciar o motor
-     */
     waitForElementsAndStart() {
       let attempts = 0;
       const interval = setInterval(async () => {
@@ -928,13 +1021,13 @@
         const elements = SigssPanelAdapter.getElements();
         if (elements.callingCard || elements.patientName || attempts > 30) {
           clearInterval(interval);
-          console.log(`Painel SIGSS+ Mascote: Elementos detectados (tentativas: ${attempts}). Iniciando motor...`);
+          console.log(`Painel SIGSS+ Mascote: Elementos detectados. Iniciando motor...`);
           await this.start();
         }
       }, 500);
     }
     /**
-     * Inicia o motor de física do mascote, o loop de animação e o observador de chamadas
+     * Inicia a quantidade configurada de mascotes na tela
      */
     async start() {
       if (this.isRunning) return;
@@ -944,54 +1037,68 @@
         return;
       }
       this.isRunning = true;
-      this.engine = new MascotEngine();
-      this.renderer = new MascotRenderer(this.engine);
-      this.engine.updateConfig({
-        speedMultiplier: settings.speedMultiplier,
-        size: settings.size,
-        opacity: settings.opacity,
-        callAwareness: settings.callAwareness
-      });
-      this.renderer.setSkin(settings.mascotSkin);
-      this.engine.onUpdate(() => {
-        if (this.renderer) {
-          this.renderer.render();
+      this.mascots = [];
+      const count = settings.mascotCount || 1;
+      console.log(`Painel SIGSS+ Mascote: Spawnando ${count} mascote(s)...`);
+      const skinsList = ["gotinha", "robozinho", "gatinho"];
+      for (let i = 0; i < count; i++) {
+        const engine = new MascotEngine();
+        engine.x = window.innerWidth / (count + 1) * (i + 1) - settings.size / 2;
+        engine.y = 80;
+        engine.updateConfig({
+          speedMultiplier: settings.speedMultiplier,
+          size: settings.size,
+          opacity: settings.opacity,
+          callAwareness: settings.callAwareness
+        });
+        const renderer = new MascotRenderer(engine);
+        let activeSkin = "gotinha";
+        if (settings.mascotSkin === "mixed") {
+          activeSkin = skinsList[i % skinsList.length];
+        } else {
+          activeSkin = settings.mascotSkin;
         }
-      });
+        renderer.setSkin(activeSkin);
+        engine.onUpdate(() => {
+          renderer.render();
+        });
+        this.mascots.push({ engine, renderer });
+      }
       this.animationLoop();
       this.setupCallObserver();
     }
     /**
-     * Finaliza o motor e remove os elementos visuais da tela
+     * Finaliza todos os motores e limpa os elementos visuais
      */
     stop() {
       this.isRunning = false;
-      if (this.renderer) {
-        this.renderer.destroy();
-        this.renderer = null;
-      }
+      this.mascots.forEach((m) => {
+        m.renderer.destroy();
+      });
+      this.mascots = [];
       if (this.observer) {
         this.observer.disconnect();
         this.observer = null;
       }
-      this.engine = null;
-      console.log("Painel SIGSS+ Mascote: Motor parado e elementos removidos.");
+      console.log("Painel SIGSS+ Mascote: Motores parados e todos os mascotes removidos.");
     }
     /**
-     * Loop de animação via requestAnimationFrame
+     * Game Loop unificado para todos os mascotes
      */
     animationLoop = () => {
-      if (!this.isRunning || !this.engine) return;
-      this.engine.update();
+      if (!this.isRunning) return;
+      this.mascots.forEach((m) => {
+        m.engine.update();
+      });
       requestAnimationFrame(this.animationLoop);
     };
     /**
-     * Monitora alterações na div de paciente ativo para simular ou disparar a reação de susto e festa
+     * Escuta novas chamadas e notifica simultaneamente todos os mascotes ativos
      */
     setupCallObserver() {
       const elements = SigssPanelAdapter.getElements();
       if (!elements.patientName) {
-        console.warn("Painel SIGSS+ Mascote: Elemento de nome de paciente n\xE3o encontrado. Observer n\xE3o ativado.");
+        console.warn("Painel SIGSS+ Mascote: Elemento de nome de paciente n\xE3o encontrado para observer.");
         return;
       }
       this.observer = new MutationObserver((mutations) => {
@@ -999,9 +1106,9 @@
           const text = (elements.patientName?.textContent || "").trim();
           if (text && text !== "-" && text.length > 2) {
             const local = elements.localName?.textContent || "";
-            if (this.engine) {
-              this.engine.triggerCallReaction(text, local);
-            }
+            this.mascots.forEach((m) => {
+              m.engine.triggerCallReaction(text, local);
+            });
             break;
           }
         }
@@ -1011,10 +1118,9 @@
         characterData: true,
         subtree: true
       });
-      console.log("Painel SIGSS+ Mascote: Monitoramento de chamadas ativado via MutationObserver.");
     }
     /**
-     * Atualiza as configurações em execução em tempo real sem recarregar a página
+     * Reinicia ou atualiza configurações em tempo real
      */
     setupConfigListener() {
       MascotConfigManager.onChange((changes) => {
@@ -1025,32 +1131,39 @@
           } else {
             this.stop();
           }
+          return;
         }
-        if (!this.isRunning || !this.engine || !this.renderer) return;
-        if (changes.mascotSkin) {
-          this.renderer.setSkin(changes.mascotSkin.newValue);
+        if (!this.isRunning) return;
+        const hasStructureChanges = changes.mascotCount || changes.mascotSkin;
+        if (hasStructureChanges) {
+          console.log("Painel SIGSS+ Mascote: Altera\xE7\xF5es estruturais salvas. Reiniciando mascotes...");
+          this.stop();
+          this.start();
+          return;
         }
-        const updatedConfig = {};
-        let hasConfigUpdate = false;
-        if (changes.speedMultiplier) {
-          updatedConfig.speedMultiplier = changes.speedMultiplier.newValue;
-          hasConfigUpdate = true;
-        }
-        if (changes.size) {
-          updatedConfig.size = changes.size.newValue;
-          hasConfigUpdate = true;
-        }
-        if (changes.opacity) {
-          updatedConfig.opacity = changes.opacity.newValue;
-          hasConfigUpdate = true;
-        }
-        if (changes.callAwareness) {
-          updatedConfig.callAwareness = changes.callAwareness.newValue;
-          hasConfigUpdate = true;
-        }
-        if (hasConfigUpdate) {
-          this.engine.updateConfig(updatedConfig);
-        }
+        this.mascots.forEach((m) => {
+          const updatedConfig = {};
+          let hasConfigUpdate = false;
+          if (changes.speedMultiplier) {
+            updatedConfig.speedMultiplier = changes.speedMultiplier.newValue;
+            hasConfigUpdate = true;
+          }
+          if (changes.size) {
+            updatedConfig.size = changes.size.newValue;
+            hasConfigUpdate = true;
+          }
+          if (changes.opacity) {
+            updatedConfig.opacity = changes.opacity.newValue;
+            hasConfigUpdate = true;
+          }
+          if (changes.callAwareness) {
+            updatedConfig.callAwareness = changes.callAwareness.newValue;
+            hasConfigUpdate = true;
+          }
+          if (hasConfigUpdate) {
+            m.engine.updateConfig(updatedConfig);
+          }
+        });
       });
     }
   };

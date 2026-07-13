@@ -6,11 +6,14 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 2. Obter Elementos do DOM
   const toggleMascot = document.getElementById('toggle-mascot') as HTMLInputElement;
+  const sliderCount = document.getElementById('slider-count') as HTMLInputElement;
   const sliderSize = document.getElementById('slider-size') as HTMLInputElement;
   const sliderSpeed = document.getElementById('slider-speed') as HTMLInputElement;
   const sliderOpacity = document.getElementById('slider-opacity') as HTMLInputElement;
   const checkboxCall = document.getElementById('checkbox-call-awareness') as HTMLInputElement;
+  const btnAccess = document.getElementById('btn-access-panel') as HTMLButtonElement;
   
+  const valCount = document.getElementById('val-count') as HTMLElement;
   const valSize = document.getElementById('val-size') as HTMLElement;
   const valSpeed = document.getElementById('val-speed') as HTMLElement;
   const valOpacity = document.getElementById('val-opacity') as HTMLElement;
@@ -18,12 +21,13 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // 3. Preencher Valores Iniciais nos Controles
   toggleMascot.checked = settings.mascotEnabled;
+  sliderCount.value = String(settings.mascotCount || 1);
   sliderSize.value = String(settings.size);
   sliderSpeed.value = String(settings.speedMultiplier);
   sliderOpacity.value = String(settings.opacity);
   checkboxCall.checked = settings.callAwareness;
 
-  updateReadouts(settings.size, settings.speedMultiplier, settings.opacity);
+  updateReadouts(settings.mascotCount || 1, settings.size, settings.speedMultiplier, settings.opacity);
   setupActiveSkinCard(settings.mascotSkin);
 
   // Desativar controles visuais se o mascote estiver desabilitado globalmente
@@ -36,6 +40,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const enabled = toggleMascot.checked;
     toggleControlStates(enabled);
     await MascotConfigManager.save({ mascotEnabled: enabled });
+  });
+
+  // Slider Quantidade de Mascotes
+  sliderCount.addEventListener('input', async () => {
+    const mascotCount = parseInt(sliderCount.value);
+    valCount.textContent = String(mascotCount);
+    await MascotConfigManager.save({ mascotCount });
   });
 
   // Slider Tamanho
@@ -65,6 +76,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     await MascotConfigManager.save({ callAwareness });
   });
 
+  // Botão Acessar Painel Oficial
+  btnAccess.addEventListener('click', () => {
+    chrome.tabs.create({
+      url: 'http://sigss.betim.mg.gov.br/unique-panel/panel-screen/94afeb1a-5112-4d61-bce8-dbf8f5b0a03d'
+    });
+  });
+
   // Cards de Seleção de Mascote
   skinCards.forEach(card => {
     card.addEventListener('click', async () => {
@@ -80,7 +98,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // --- Funções Auxiliares ---
 
-  function updateReadouts(size: number, speed: number, opacity: number) {
+  function updateReadouts(count: number, size: number, speed: number, opacity: number) {
+    valCount.textContent = String(count);
     valSize.textContent = `${size}px`;
     valSpeed.textContent = `${speed.toFixed(1)}x`;
     valOpacity.textContent = `${Math.round(opacity * 100)}%`;
@@ -102,7 +121,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const pointerEvents = enabled ? 'auto' : 'none';
 
     // Desativa sliders, checkbox e cards de skin visualmente
-    [sliderSize, sliderSpeed, sliderOpacity, checkboxCall].forEach(control => {
+    [sliderCount, sliderSize, sliderSpeed, sliderOpacity, checkboxCall].forEach(control => {
       control.disabled = !enabled;
       (control.parentElement as HTMLElement).style.opacity = opacityVal;
     });

@@ -76,6 +76,14 @@
             </div>
             <span class="skin-name">Gatinho</span>
           </div>
+
+          <!-- Card Misturado -->
+          <div class="skin-card" data-skin="mixed">
+            <div class="skin-preview">
+              <span class="mixed-emoji">🎨</span>
+            </div>
+            <span class="skin-name">Misturado</span>
+          </div>
         </div>
       </section>
 
@@ -83,6 +91,15 @@
       <section class="section-panel">
         <h2 class="section-title">Ajustes Finos</h2>
         
+        <!-- Slider Quantidade de Mascotes -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Quantidade de Mascotes</span>
+            <span class="setting-value" id="val-count">1</span>
+          </div>
+          <input type="range" id="slider-count" min="1" max="4" step="1" value="1" class="slider-range">
+        </div>
+
         <!-- Slider Tamanho -->
         <div class="setting-row">
           <div class="setting-info">
@@ -122,12 +139,17 @@
           </label>
         </div>
       </section>
+
+      <!-- Botão para acessar o painel -->
+      <button id="btn-access-panel" class="access-panel-btn">
+        🖥️ Acessar o Painel Oficial
+      </button>
     </main>
 
     <!-- Rodapé -->
     <footer class="popup-footer">
-      <div class="footer-version">Versão 1.0.0</div>
-      <div class="footer-info">UBS Betim • Saúde Integrada</div>
+      <div class="footer-credit">Desenvolvido por Guilherme Paicheco Ferreira</div>
+      <div class="footer-version">v1.1.0 • UBS Betim</div>
     </footer>
   </div>
 
