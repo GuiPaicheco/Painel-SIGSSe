@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../src/background.ts"],
+  "sourcesContent": ["chrome.runtime.onInstalled.addListener(() => {\n  console.log('Painel SIGSS+ Mascote instalado com sucesso.');\n});\n"],
+  "mappings": ";;;AAAA,SAAO,QAAQ,YAAY,YAAY,MAAM;AAC3C,YAAQ,IAAI,8CAA8C;AAAA,EAC5D,CAAC;",
+  "names": []
+}

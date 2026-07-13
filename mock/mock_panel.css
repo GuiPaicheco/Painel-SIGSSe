@@ -1,0 +1,324 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@500;700;900&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #0b111e;
+  color: #f3f4f6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Área Superior com Controles do Desenvolvedor (Não faz parte do painel real) */
+.simulation-controls {
+  background: linear-gradient(135deg, #1f2937, #111827);
+  border-bottom: 2px solid #374151;
+  padding: 15px 25px;
+  color: #fff;
+  z-index: 100;
+}
+
+.simulation-controls h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.1rem;
+  margin-bottom: 6px;
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.simulation-controls p {
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin-bottom: 12px;
+}
+
+.simulation-controls button {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+
+.simulation-controls button:hover {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  transform: translateY(-1px);
+}
+
+.simulation-controls button#sim-btn-clear {
+  background: linear-gradient(135deg, #4b5563, #374151);
+  box-shadow: none;
+}
+
+.simulation-controls button#sim-btn-clear:hover {
+  background: linear-gradient(135deg, #6b7280, #4b5563);
+}
+
+/* ==========================================================================
+   PAINEL REAL (Simula o monitor de TV na sala de espera)
+   ========================================================================== */
+.panel-container {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 120px);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Cabeçalho */
+.panel-header {
+  height: 90px;
+  background-color: #1e293b;
+  border-bottom: 5px solid #0284c7;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+}
+
+.header-logo {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 1.8rem;
+  letter-spacing: 1px;
+  color: #0ea5e9;
+}
+
+.logo-subtitle {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.header-unit {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.header-clock {
+  font-family: monospace;
+  font-size: 2.2rem;
+  font-weight: bold;
+  color: #38bdf8;
+  background-color: #0f172a;
+  padding: 6px 16px;
+  border-radius: 8px;
+  border: 1px solid #334155;
+}
+
+/* Corpo Principal (Grid 70% esquerda, 30% direita) */
+.panel-main {
+  flex-grow: 1;
+  display: grid;
+  grid-template-columns: 72% 28%;
+  background-color: #0f172a;
+}
+
+/* Seção de Chamada Ativa */
+.calling-section {
+  padding: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.calling-card {
+  width: 100%;
+  height: 100%;
+  background-color: #1e293b;
+  border: 3px solid #334155;
+  border-radius: 20px;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Animação quando uma nova chamada é feita */
+.new-call-flash {
+  animation: callFlashAnimation 1s ease-in-out 3;
+}
+
+@keyframes callFlashAnimation {
+  0%, 100% {
+    background-color: #1e293b;
+    border-color: #334155;
+  }
+  50% {
+    background-color: #0c4a6e;
+    border-color: #0ea5e9;
+  }
+}
+
+.calling-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: #0ea5e9;
+  letter-spacing: 2px;
+  border-bottom: 2px dashed #334155;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.calling-details {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  flex-grow: 1;
+  justify-content: center;
+}
+
+.detail-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #64748b;
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
+}
+
+.detail-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 3.4rem;
+  font-weight: 900;
+  color: #ffffff;
+  line-height: 1.1;
+  word-wrap: break-word;
+}
+
+.detail-group-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-top: 10px;
+}
+
+.detail-group-row .detail-value {
+  font-size: 2.2rem;
+  color: #e2e8f0;
+}
+
+.detail-value.highlight-box {
+  color: #f59e0b;
+  font-weight: 900;
+}
+
+/* Seção de Histórico */
+.history-section {
+  background-color: #111827;
+  border-left: 5px solid #374151;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+}
+
+.history-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #9ca3af;
+  letter-spacing: 1px;
+  text-align: center;
+  border-bottom: 2px solid #374151;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+.history-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.history-item {
+  background-color: #1f2937;
+  border-left: 5px solid #10b981;
+  border-radius: 8px;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.hist-patient {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #f3f4f6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.hist-sub {
+  display: flex;
+  justify-content: space-between;
+}
+
+.hist-local {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #10b981;
+}
+
+/* Rodapé */
+.panel-footer {
+  height: 60px;
+  background-color: #0f172a;
+  border-top: 4px solid #1e293b;
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+}
+
+.footer-ticker {
+  width: 100%;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #e2e8f0;
+}

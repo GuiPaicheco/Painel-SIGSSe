@@ -1,0 +1,351 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #0b0f19;
+  color: #f1f5f9;
+  width: 320px;
+  overflow: hidden;
+}
+
+.popup-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background: linear-gradient(185deg, #0f172a, #0b0f19);
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+}
+
+/* Cabeçalho */
+.popup-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #1e293b;
+  padding-bottom: 12px;
+  margin-bottom: 14px;
+}
+
+.header-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-icon {
+  font-size: 22px;
+  background-color: #1e3a8a;
+  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 6px -1px rgba(30, 58, 138, 0.5);
+  animation: logoWobble 4s ease-in-out infinite;
+}
+
+@keyframes logoWobble {
+  0%, 100% { transform: rotate(0deg); }
+  5% { transform: rotate(-8deg) scale(1.05); }
+  10% { transform: rotate(8deg) scale(1.05); }
+  15% { transform: rotate(-4deg); }
+  20% { transform: rotate(2deg); }
+  25% { transform: rotate(0deg); }
+}
+
+.logo-text h1 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.3px;
+}
+
+.logo-text p {
+  font-size: 10px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+/* Switch Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 44px;
+  height: 24px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #334155;
+  transition: .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+input:checked + .slider {
+  background-color: #2563eb;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2563eb;
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.slider.round {
+  border-radius: 24px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* Corpo das Configurações */
+.popup-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.section-panel {
+  background-color: #111827;
+  border: 1px solid #1e293b;
+  border-radius: 10px;
+  padding: 12px;
+}
+
+.section-title {
+  font-size: 10px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 10px;
+}
+
+/* Seletor de Mascotes */
+.skin-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+.skin-card {
+  background-color: #1f2937;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.skin-card:hover {
+  background-color: #374151;
+  transform: translateY(-2px);
+}
+
+.skin-card.active {
+  background-color: #1e3a8a;
+  border-color: #3b82f6;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.15);
+}
+
+.skin-preview {
+  width: 44px;
+  height: 44px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.skin-preview svg {
+  width: 100%;
+  height: 100%;
+}
+
+.skin-name {
+  font-size: 10px;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.skin-card.active .skin-name {
+  color: #ffffff;
+}
+
+/* Sliders de Ajuste */
+.setting-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.setting-row:last-child {
+  margin-bottom: 0;
+}
+
+.setting-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.setting-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+.setting-value {
+  font-size: 11px;
+  font-weight: 700;
+  color: #38bdf8;
+}
+
+/* Estilo do Input Range */
+.slider-range {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 5px;
+  border-radius: 3px;
+  background: #334155;
+  outline: none;
+}
+
+.slider-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #2563eb;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  box-shadow: 0 0 4px rgba(37, 99, 235, 0.5);
+}
+
+.slider-range::-webkit-slider-thumb:hover {
+  background: #3b82f6;
+  transform: scale(1.1);
+}
+
+/* Checkbox estilizado */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+}
+
+.checkbox-container {
+  display: block;
+  position: relative;
+  padding-left: 26px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  color: #cbd5e1;
+  user-select: none;
+}
+
+.checkbox-container input {
+  position: absolute;
+  opacity: 0;
+  cursor: pointer;
+  height: 0;
+  width: 0;
+}
+
+.checkmark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 16px;
+  width: 16px;
+  background-color: #334155;
+  border-radius: 4px;
+  transition: all 0.2s ease;
+}
+
+.checkbox-container:hover input ~ .checkmark {
+  background-color: #475569;
+}
+
+.checkbox-container input:checked ~ .checkmark {
+  background-color: #2563eb;
+}
+
+.checkmark:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+.checkbox-container input:checked ~ .checkmark:after {
+  display: block;
+}
+
+.checkbox-container .checkmark:after {
+  left: 5px;
+  top: 2px;
+  width: 4px;
+  height: 8px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+/* Rodapé */
+.popup-footer {
+  margin-top: 14px;
+  border-top: 1px solid #1e293b;
+  padding-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.footer-version {
+  font-size: 9px;
+  font-weight: 600;
+  color: #475569;
+}
+
+.footer-info {
+  font-size: 9px;
+  font-weight: 500;
+  color: #64748b;
+}

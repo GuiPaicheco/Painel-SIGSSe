@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mascote SIGSS+</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-wrapper">
+    <!-- Cabeçalho -->
+    <header class="popup-header">
+      <div class="header-main">
+        <div class="logo-icon">🔔</div>
+        <div class="logo-text">
+          <h1>SIGSS+ Mascote</h1>
+          <p>Painel de Chamadas UBS</p>
+        </div>
+      </div>
+      <!-- Toggle de Ativação -->
+      <div class="toggle-container">
+        <label class="switch">
+          <input type="checkbox" id="toggle-mascot" checked>
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </header>
+
+    <!-- Corpo das Configurações -->
+    <main class="popup-body">
+      <!-- Seletor de Mascotes (Cards) -->
+      <section class="section-panel">
+        <h2 class="section-title">Escolha seu Companheiro</h2>
+        <div class="skin-selector">
+          <!-- Card Gotinha -->
+          <div class="skin-card active" data-skin="gotinha">
+            <div class="skin-preview">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M32 6C32 6 16 28 16 38C16 47 23 51 32 51C41 51 48 47 48 38C48 28 32 6 32 6Z" fill="#ffffff" stroke="#3b82f6" stroke-width="3"/>
+                <path d="M20 40C23 43 41 43 44 40C44 40 42 48 32 48C22 48 20 40 20 40Z" fill="#60a5fa" opacity="0.8"/>
+                <circle cx="26" cy="30" r="3" fill="#1e293b"/>
+                <circle cx="38" cy="30" r="3" fill="#1e293b"/>
+                <path d="M29 34.5C29.5 35.5 34.5 35.5 35 34.5" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="skin-name">Gotinha</span>
+          </div>
+
+          <!-- Card Robozinho -->
+          <div class="skin-card" data-skin="robozinho">
+            <div class="skin-preview">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <line x1="32" y1="12" x2="32" y2="6" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
+                <circle cx="32" cy="6" r="2.5" fill="#3b82f6"/>
+                <rect x="16" y="12" width="32" height="30" rx="15" fill="#e2e8f0" stroke="#64748b" stroke-width="2.5"/>
+                <rect x="22" y="17" width="20" height="13" rx="4" fill="#0f172a"/>
+                <rect x="26" y="21" width="3" height="4" rx="1" fill="#38bdf8"/>
+                <rect x="35" y="21" width="3" height="4" rx="1" fill="#38bdf8"/>
+              </svg>
+            </div>
+            <span class="skin-name">Robozinho</span>
+          </div>
+
+          <!-- Card Gatinho -->
+          <div class="skin-card" data-skin="gatinho">
+            <div class="skin-preview">
+              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="14" y="22" width="36" height="32" rx="12" fill="#f59e0b" stroke="#d97706" stroke-width="2.5"/>
+                <rect x="18" y="26" width="28" height="24" rx="8" fill="#fbbf24"/>
+                <path d="M18 23L12 10L24 21Z" fill="#d97706"/>
+                <path d="M38 23L44 10L32 21Z" fill="#d97706"/>
+                <circle cx="23" cy="32" r="3" fill="#1e293b"/>
+                <circle cx="35" cy="32" r="3" fill="#1e293b"/>
+                <path d="M28 35.5L29 34L30 35.5" stroke="#d97706" stroke-width="1.5"/>
+              </svg>
+            </div>
+            <span class="skin-name">Gatinho</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sliders de Ajuste -->
+      <section class="section-panel">
+        <h2 class="section-title">Ajustes Finos</h2>
+        
+        <!-- Slider Tamanho -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Tamanho</span>
+            <span class="setting-value" id="val-size">64px</span>
+          </div>
+          <input type="range" id="slider-size" min="40" max="120" step="5" value="64" class="slider-range">
+        </div>
+
+        <!-- Slider Velocidade -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Velocidade</span>
+            <span class="setting-value" id="val-speed">1.0x</span>
+          </div>
+          <input type="range" id="slider-speed" min="0.5" max="2.5" step="0.1" value="1.0" class="slider-range">
+        </div>
+
+        <!-- Slider Opacidade -->
+        <div class="setting-row">
+          <div class="setting-info">
+            <span class="setting-label">Visibilidade (Opacidade)</span>
+            <span class="setting-value" id="val-opacity">90%</span>
+          </div>
+          <input type="range" id="slider-opacity" min="0.2" max="1.0" step="0.05" value="0.9" class="slider-range">
+        </div>
+      </section>
+
+      <!-- Opções Extras -->
+      <section class="section-panel">
+        <h2 class="section-title">Interações Inteligentes</h2>
+        <div class="checkbox-row">
+          <label class="checkbox-container">
+            Reagir a novas chamadas (Pulo / Alerta)
+            <input type="checkbox" id="checkbox-call-awareness" checked>
+            <span class="checkmark"></span>
+          </label>
+        </div>
+      </section>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="popup-footer">
+      <div class="footer-version">Versão 1.0.0</div>
+      <div class="footer-info">UBS Betim • Saúde Integrada</div>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

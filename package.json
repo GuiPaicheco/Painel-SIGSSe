@@ -1,0 +1,24 @@
+{
+  "name": "sigss-panel-mascot",
+  "version": "1.0.0",
+  "description": "Chrome extension to display interactive screen pets in the SIGSS waiting room calling panel.",
+  "main": "dist/content.js",
+  "scripts": {
+    "build": "node build.js",
+    "watch": "node build.js --watch"
+  },
+  "keywords": [
+    "sigss",
+    "chrome-extension",
+    "mascot",
+    "shimeji",
+    "healthcare"
+  ],
+  "author": "Guilherme Paicheco Ferreira",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "esbuild": "^0.21.5",
+    "typescript": "^5.4.5"
+  }
+}

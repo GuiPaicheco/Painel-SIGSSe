@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simulador de Painel - SIGSS Betim</title>
+  <link rel="stylesheet" href="mock_panel.css">
+</head>
+<body>
+  <div class="simulation-controls">
+    <h3>Painel de Controle do Simulador</h3>
+    <p>Use os botões abaixo para simular ações no painel de chamadas:</p>
+    <button id="sim-btn-call">🔔 Simular Nova Chamada</button>
+    <button id="sim-btn-clear">🧹 Limpar Chamada Ativa</button>
+  </div>
+
+  <div class="panel-container">
+    <!-- Cabeçalho do Painel -->
+    <header class="panel-header">
+      <div class="header-logo">
+        <span class="logo-title">PREFEITURA DE BETIM</span>
+        <span class="logo-subtitle">Secretaria Municipal de Saúde</span>
+      </div>
+      <div class="header-unit">
+        UBS PETROVALE
+      </div>
+      <div class="header-clock" id="hora-painel">
+        18:55:00
+      </div>
+    </header>
+
+    <!-- Corpo do Painel -->
+    <main class="panel-main">
+      <!-- Seção Principal: Chamando Ativa -->
+      <section class="calling-section">
+        <div class="calling-card">
+          <div class="calling-label">CHAMANDO</div>
+          
+          <div class="calling-details">
+            <div class="detail-group">
+              <span class="detail-label">PACIENTE</span>
+              <span class="detail-value" id="current-patient">-</span>
+            </div>
+            
+            <div class="detail-group-row">
+              <div class="detail-group">
+                <span class="detail-label">LOCAL / SALA</span>
+                <span class="detail-value highlight-box" id="current-local">-</span>
+              </div>
+              <div class="detail-group">
+                <span class="detail-label">PROFISSIONAL</span>
+                <span class="detail-value" id="current-professional">-</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Seção Lateral: Últimas Chamadas -->
+      <aside class="history-section">
+        <h2 class="history-title">ÚLTIMAS CHAMADAS</h2>
+        <ul class="history-list" id="history-list">
+          <li class="history-item">
+            <span class="hist-patient">MARIA AUXILIADORA COSTA</span>
+            <div class="hist-sub">
+              <span class="hist-local">SALA 03 (TRIAGEM)</span>
+            </div>
+          </li>
+          <li class="history-item">
+            <span class="hist-patient">JOAO PEDRO DE OLIVEIRA</span>
+            <div class="hist-sub">
+              <span class="hist-local">SALA 05 (MEDICO 1)</span>
+            </div>
+          </li>
+          <li class="history-item">
+            <span class="hist-patient">FRANCISCO SILVA DOS SANTOS</span>
+            <div class="hist-sub">
+              <span class="hist-local">SALA 01 (VACINA)</span>
+            </div>
+          </li>
+        </ul>
+      </aside>
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="panel-footer">
+      <div class="footer-ticker">
+        <marquee scrollamount="5">Atenção: A vacinação contra a Influenza (Gripe) está disponível de segunda a sexta, das 08h às 17h. Cuide de quem você ama!</marquee>
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    // Configurações do simulador
+    const patients = [
+      "ANA JULIA SILVEIRA SOUZA",
+      "CARLOS EDUARDO ALMEIDA",
+      "BEATRIZ GONCALVES DIAS",
+      "GABRIEL MONTEIRO REIS",
+      "HELENA DUARTE DE SOUZA",
+      "ROBERTO PEREIRA PINTO",
+      "MARIANA DE CASTRO SILVA",
+      "LUCAS FELIPE RAMOS"
+    ];
+
+    const locals = [
+      "SALA 01 - VACINA",
+      "SALA 03 - TRIAGEM",
+      "SALA 04 - CURATIVO",
+      "SALA 05 - MEDICO 1",
+      "SALA 06 - MEDICO 2",
+      "SALA 08 - ODONTOLOGIA",
+      "SALA 10 - PEDIATRIA"
+    ];
+
+    const professionals = [
+      "DRA. ALICE PEREIRA (CLINICO)",
+      "DR. THIAGO COSTA (PEDIATRA)",
+      "ENF. CAMILA REIS (TRIAGEM)",
+      "ENF. MARIANA SOUZA (GERAL)",
+      "DR. BRUNO VIEIRA (DENTISTA)"
+    ];
+
+    // Atualização de Relógio do Painel
+    setInterval(() => {
+      const now = new Date();
+      const hh = String(now.getHours()).padStart(2, '0');
+      const mm = String(now.getMinutes()).padStart(2, '0');
+      const ss = String(now.getSeconds()).padStart(2, '0');
+      document.getElementById('hora-painel').textContent = `${hh}:${mm}:${ss}`;
+    }, 1000);
+
+    // Seletores dos elementos
+    const patientEl = document.getElementById('current-patient');
+    const localEl = document.getElementById('current-local');
+    const professionalEl = document.getElementById('current-professional');
+    const historyList = document.getElementById('history-list');
+
+    // Botões de Ação
+    document.getElementById('sim-btn-call').addEventListener('click', () => {
+      // Se houver chamada ativa atual, adiciona ao histórico
+      const lastPatient = patientEl.textContent;
+      const lastLocal = localEl.textContent;
+      if (lastPatient && lastPatient !== '-') {
+        const li = document.createElement('li');
+        li.className = 'history-item';
+        li.innerHTML = `
+          <span class="hist-patient">${lastPatient}</span>
+          <div class="hist-sub">
+            <span class="hist-local">${lastLocal}</span>
+          </div>
+        `;
+        historyList.insertBefore(li, historyList.firstChild);
+        // Limita o histórico a 5 itens
+        if (historyList.children.length > 5) {
+          historyList.removeChild(historyList.lastChild);
+        }
+      }
+
+      // Escolhe novos dados aleatórios
+      const randomPatient = patients[Math.floor(Math.random() * patients.length)];
+      const randomLocal = locals[Math.floor(Math.random() * locals.length)];
+      const randomProfessional = professionals[Math.floor(Math.random() * professionals.length)];
+
+      // Atualiza o painel chamando
+      patientEl.textContent = randomPatient;
+      localEl.textContent = randomLocal;
+      professionalEl.textContent = randomProfessional;
+
+      // Adiciona classe de animação temporária para o chamado
+      const callingCard = document.querySelector('.calling-card');
+      callingCard.classList.add('new-call-flash');
+      setTimeout(() => {
+        callingCard.classList.remove('new-call-flash');
+      }, 3000);
+    });
+
+    document.getElementById('sim-btn-clear').addEventListener('click', () => {
+      patientEl.textContent = '-';
+      localEl.textContent = '-';
+      professionalEl.textContent = '-';
+    });
+  </script>
+</body>
+</html>
