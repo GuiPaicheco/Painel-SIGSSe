@@ -137,6 +137,7 @@
     currentLocal = "";
     currentProfessional = "";
     patientCallCount = 1;
+    activeCallMessage = "";
     lastAnnouncedHour = -1;
     pastPatients = [];
     // Nomes curtos das últimas pessoas chamadas
@@ -339,6 +340,7 @@
       }
       this.currentLocal = local;
       this.currentProfessional = professional;
+      this.activeCallMessage = this.generatePersonalizedCallMessage(patientName, local, professional);
       const elements = SigssPanelAdapter.getElements();
       const shortName = this.getShortName(patientName);
       if (shortName && !this.pastPatients.includes(shortName)) {
@@ -364,6 +366,51 @@
       this.direction = dx > 0 ? "RIGHT" : "LEFT";
       this.targetVx = (dx > 0 ? this.runSpeed : -this.runSpeed) * this.config.speedMultiplier;
       this.vx = this.targetVx * 0.8;
+    }
+    /**
+     * Constrói dinamicamente uma fala personalizada para o anúncio
+     */
+    generatePersonalizedCallMessage(patientName, local, professional) {
+      const name = this.getShortName(patientName);
+      const count = this.patientCallCount;
+      if (count === 2) {
+        return `\u{1F514} Segunda chamada para ${name}! Favor ir para o(a) ${local}.`;
+      }
+      if (count >= 3) {
+        return `\u26A0\uFE0F ATEN\xC7\xC3O: \xDAltima chamada para ${name}! Por favor, v\xE1 para o(a) ${local} urgente! \u{1F6AA}`;
+      }
+      const localUpper = local.toUpperCase();
+      if (localUpper.includes("VACINA")) {
+        return `\u{1F489} Hora da gotinha ou vacina! ${name}, v\xE1 para a ${local}. Sem choro! \u{1F609}`;
+      }
+      if (localUpper.includes("ODONTO") || localUpper.includes("DENTISTA")) {
+        return `\u{1FAA5} Cuidando do sorriso! ${name}, o consult\xF3rio de dentista \xE9 o(a) ${local}.`;
+      }
+      if (localUpper.includes("PEDIATRIA") || localUpper.includes("PEDIATRA")) {
+        return `\u{1F476} Aten\xE7\xE3o ao pequeno: ${name}, favor se dirigir ao(\xE0) ${local}.`;
+      }
+      if (localUpper.includes("CURATIVO")) {
+        return `\u{1FA79} Cuidado com o machucado! ${name}, dirija-se ao(\xE0) ${local}.`;
+      }
+      if (localUpper.includes("TRIAGEM")) {
+        return `\u{1FA7A} Medindo press\xE3o e peso! ${name}, v\xE1 ao(\xE0) ${local}.`;
+      }
+      if (professional && professional !== "-" && professional.length > 3) {
+        const profShort = professional.split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+        const rand = Math.random();
+        if (rand < 0.45) {
+          return `\u{1F6AA} ${name}, o(a) ${profShort} j\xE1 te espera na ${local}!`;
+        } else if (rand < 0.9) {
+          return `\u{1F469}\u200D\u2695\uFE0F Consulta com ${profShort}! V\xE1 para o(a) ${local}, ${name}.`;
+        }
+      }
+      const templates = [
+        `\u2728 ${name}, sua vez! Dirija-se ao(\xE0) ${local}. Boa sorte! \u{1F340}`,
+        `\u{1F6AA} O(A) ${local} est\xE1 te chamando, ${name}! Foco na sa\xFAde. \u{1FA7A}`,
+        `\u{1F3C3}\u200D\u2642\uFE0F Fila andou, ${name}! Corre l\xE1 no(a) ${local}.`,
+        `\u{1F31F} ${name}, sa\xFAde em primeiro lugar! V\xE1 para o(a) ${local}.`
+      ];
+      return templates[Math.floor(Math.random() * templates.length)];
     }
     /**
      * Helper para formatar o nome completo em Nome + Sobrenome
@@ -607,7 +654,7 @@
       if (!this.balloonEl) return;
       const now = Date.now();
       if (this.engine.isCelebrating && callAwareness) {
-        const patientGreet = this.getPersonalizedCallMessage();
+        const patientGreet = this.engine.activeCallMessage || "\u{1F4E2} Nova chamada!";
         this.setBalloonText(patientGreet, true);
         return;
       }
@@ -879,62 +926,6 @@
       }
     `;
       (document.head || document.documentElement).appendChild(style);
-    }
-    /**
-     * Constrói dinamicamente uma fala personalizada para a chamada ativa do painel
-     */
-    getPersonalizedCallMessage() {
-      const name = this.getShortName(this.engine.currentCalledPatient);
-      const local = this.engine.currentLocal || "Consult\xF3rio";
-      const prof = this.engine.currentProfessional || "Profissional";
-      const count = this.engine.patientCallCount;
-      if (count === 2) {
-        return `\u{1F514} Segunda chamada para ${name}! Favor ir para o(a) ${local}.`;
-      }
-      if (count >= 3) {
-        return `\u26A0\uFE0F ATEN\xC7\xC3O: \xDAltima chamada para ${name}! Por favor, v\xE1 para o(a) ${local} urgente! \u{1F6AA}`;
-      }
-      const localUpper = local.toUpperCase();
-      if (localUpper.includes("VACINA")) {
-        return `\u{1F489} Hora da gotinha ou vacina! ${name}, v\xE1 para a ${local}. Sem choro! \u{1F609}`;
-      }
-      if (localUpper.includes("ODONTO") || localUpper.includes("DENTISTA")) {
-        return `\u{1FAA5} Cuidando do sorriso! ${name}, o consult\xF3rio de dentista \xE9 o(a) ${local}.`;
-      }
-      if (localUpper.includes("PEDIATRIA") || localUpper.includes("PEDIATRA")) {
-        return `\u{1F476} Aten\xE7\xE3o ao pequeno: ${name}, favor se dirigir ao(\xE0) ${local}.`;
-      }
-      if (localUpper.includes("CURATIVO")) {
-        return `\u{1FA79} Cuidado com o machucado! ${name}, dirija-se ao(\xE0) ${local}.`;
-      }
-      if (localUpper.includes("TRIAGEM")) {
-        return `\u{1FA7A} Medindo press\xE3o e peso! ${name}, v\xE1 ao(\xE0) ${local}.`;
-      }
-      if (prof && prof !== "-" && prof.length > 3) {
-        const profShort = prof.split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
-        const rand = Math.random();
-        if (rand < 0.45) {
-          return `\u{1F6AA} ${name}, o(a) ${profShort} j\xE1 te espera na ${local}!`;
-        } else if (rand < 0.9) {
-          return `\u{1F469}\u200D\u2695\uFE0F Consulta com ${profShort}! V\xE1 para o(a) ${local}, ${name}.`;
-        }
-      }
-      const templates = [
-        `\u2728 ${name}, sua vez! Dirija-se ao(\xE0) ${local}. Boa sorte! \u{1F340}`,
-        `\u{1F6AA} O(A) ${local} est\xE1 te chamando, ${name}! Foco na sa\xFAde. \u{1FA7A}`,
-        `\u{1F3C3}\u200D\u2642\uFE0F Fila andou, ${name}! Corre l\xE1 no(a) ${local}.`,
-        `\u{1F31F} ${name}, sa\xFAde em primeiro lugar! V\xE1 para o(a) ${local}.`
-      ];
-      return templates[Math.floor(Math.random() * templates.length)];
-    }
-    getShortName(fullName) {
-      if (!fullName) return "";
-      const nameParts = fullName.trim().split(/\s+/);
-      if (nameParts.length > 1) {
-        const format = (str) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-        return `${format(nameParts[0])} ${format(nameParts[nameParts.length - 1])}`;
-      }
-      return fullName;
     }
     // ==========================================================================
     // VETORES SVG DINÂMICOS

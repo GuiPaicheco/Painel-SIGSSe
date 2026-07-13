@@ -57,6 +57,7 @@ export class MascotEngine {
   public currentLocal = '';
   public currentProfessional = '';
   public patientCallCount = 1;
+  public activeCallMessage = '';
   public lastAnnouncedHour = -1;
   public pastPatients: string[] = []; // Nomes curtos das últimas pessoas chamadas
 
@@ -307,6 +308,9 @@ export class MascotEngine {
     this.currentLocal = local;
     this.currentProfessional = professional;
 
+    // Gerar a fala personalizada de anúncio UMA ÚNICA VEZ e salvá-la para evitar oscilações em loop
+    this.activeCallMessage = this.generatePersonalizedCallMessage(patientName, local, professional);
+
     const elements = SigssPanelAdapter.getElements();
     
     // Adicionar nome curto do paciente ao histórico de comemorações passadas
@@ -340,6 +344,60 @@ export class MascotEngine {
     this.direction = dx > 0 ? 'RIGHT' : 'LEFT';
     this.targetVx = (dx > 0 ? this.runSpeed : -this.runSpeed) * this.config.speedMultiplier;
     this.vx = this.targetVx * 0.8;
+  }
+
+  /**
+   * Constrói dinamicamente uma fala personalizada para o anúncio
+   */
+  private generatePersonalizedCallMessage(patientName: string, local: string, professional: string): string {
+    const name = this.getShortName(patientName);
+    const count = this.patientCallCount;
+
+    // 1. Tratamento para rechamadas
+    if (count === 2) {
+      return `🔔 Segunda chamada para ${name}! Favor ir para o(a) ${local}.`;
+    }
+    if (count >= 3) {
+      return `⚠️ ATENÇÃO: Última chamada para ${name}! Por favor, vá para o(a) ${local} urgente! 🚪`;
+    }
+
+    // 2. Por Local/Sala
+    const localUpper = local.toUpperCase();
+    if (localUpper.includes('VACINA')) {
+      return `💉 Hora da gotinha ou vacina! ${name}, vá para a ${local}. Sem choro! 😉`;
+    }
+    if (localUpper.includes('ODONTO') || localUpper.includes('DENTISTA')) {
+      return `🪥 Cuidando do sorriso! ${name}, o consultório de dentista é o(a) ${local}.`;
+    }
+    if (localUpper.includes('PEDIATRIA') || localUpper.includes('PEDIATRA')) {
+      return `👶 Atenção ao pequeno: ${name}, favor se dirigir ao(à) ${local}.`;
+    }
+    if (localUpper.includes('CURATIVO')) {
+      return `🩹 Cuidado com o machucado! ${name}, dirija-se ao(à) ${local}.`;
+    }
+    if (localUpper.includes('TRIAGEM')) {
+      return `🩺 Medindo pressão e peso! ${name}, vá ao(à) ${local}.`;
+    }
+
+    // 3. Por Profissional
+    if (professional && professional !== '-' && professional.length > 3) {
+      const profShort = professional.split(/\s+/).slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      const rand = Math.random();
+      if (rand < 0.45) {
+        return `🚪 ${name}, o(a) ${profShort} já te espera na ${local}!`;
+      } else if (rand < 0.90) {
+        return `👩‍⚕️ Consulta com ${profShort}! Vá para o(a) ${local}, ${name}.`;
+      }
+    }
+
+    // 4. Geral
+    const templates = [
+      `✨ ${name}, sua vez! Dirija-se ao(à) ${local}. Boa sorte! 🍀`,
+      `🚪 O(A) ${local} está te chamando, ${name}! Foco na saúde. 🩺`,
+      `🏃‍♂️ Fila andou, ${name}! Corre lá no(a) ${local}.`,
+      `🌟 ${name}, saúde em primeiro lugar! Vá para o(a) ${local}.`
+    ];
+    return templates[Math.floor(Math.random() * templates.length)];
   }
 
   /**

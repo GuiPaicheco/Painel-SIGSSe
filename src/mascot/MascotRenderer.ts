@@ -1,13 +1,13 @@
 import { MascotEngine, MascotState, MascotDirection } from './MascotEngine';
 
-export type MascotSkinType = 
-  | 'gotinha' 
-  | 'robozinho_azul' 
-  | 'robozinho_rosa' 
-  | 'robozinho_verde' 
-  | 'gatinho_laranja' 
-  | 'gatinho_cinza' 
-  | 'gatinho_preto' 
+export type MascotSkinType =
+  | 'gotinha'
+  | 'robozinho_azul'
+  | 'robozinho_rosa'
+  | 'robozinho_verde'
+  | 'gatinho_laranja'
+  | 'gatinho_cinza'
+  | 'gatinho_preto'
   | 'mixed';
 
 export class MascotRenderer {
@@ -140,11 +140,11 @@ export class MascotRenderer {
     const state = this.engine.state;
     if (this.currentSkin === 'gotinha') {
       this.spriteEl.innerHTML = this.getGotinhaSVG(state);
-    } 
+    }
     else if (this.currentSkin.startsWith('robozinho_')) {
       const color = this.currentSkin.split('_')[1]; // azul, rosa, verde
       this.spriteEl.innerHTML = this.getRobozinhoSVG(state, color);
-    } 
+    }
     else if (this.currentSkin.startsWith('gatinho_')) {
       const color = this.currentSkin.split('_')[1]; // laranja, cinza, preto
       this.spriteEl.innerHTML = this.getGatinhoSVG(state, color);
@@ -178,9 +178,9 @@ export class MascotRenderer {
 
     const now = Date.now();
 
-    // 1. Reação a chamada (Alta Prioridade - Exibe imediatamente no primeiro frame)
+    // 1. Reação a chamada (Alta Prioridade - Exibe imediatamente no primeiro frame e mantém até acabar)
     if (this.engine.isCelebrating && callAwareness) {
-      const patientGreet = this.getPersonalizedCallMessage();
+      const patientGreet = this.engine.activeCallMessage || "📢 Nova chamada!";
       this.setBalloonText(patientGreet, true);
       return;
     }
@@ -214,7 +214,7 @@ export class MascotRenderer {
     // 5. Falas normais e piadas com pacientes do histórico (A cada 45 segundos)
     if (this.engine.state === 'IDLE' || this.engine.state === 'WALK') {
       const timeSinceLastTip = now - this.lastTipTime;
-      
+
       if (timeSinceLastTip > 45000) {
         let chosenSpeech = '';
 
@@ -243,7 +243,7 @@ export class MascotRenderer {
 
         this.setBalloonText(chosenSpeech, false);
         this.lastTipTime = now;
-      } 
+      }
       else if (timeSinceLastTip > 7500 && this.balloonEl.classList.contains('visible') && !this.balloonEl.classList.contains('important-balloon')) {
         this.balloonEl.classList.remove('visible');
         this.activeBubbleContent = '';
@@ -259,11 +259,11 @@ export class MascotRenderer {
   private setBalloonText(text: string, isImportant: boolean) {
     if (!this.balloonEl) return;
     if (this.activeBubbleContent === text) return;
-    
+
     this.activeBubbleContent = text;
     this.balloonEl.textContent = text;
     this.balloonEl.classList.add('visible');
-    
+
     if (isImportant) {
       this.balloonEl.classList.add('important-balloon');
     } else {
@@ -477,72 +477,6 @@ export class MascotRenderer {
     (document.head || document.documentElement).appendChild(style);
   }
 
-  /**
-   * Constrói dinamicamente uma fala personalizada para a chamada ativa do painel
-   */
-  private getPersonalizedCallMessage(): string {
-    const name = this.getShortName(this.engine.currentCalledPatient);
-    const local = this.engine.currentLocal || 'Consultório';
-    const prof = this.engine.currentProfessional || 'Profissional';
-    const count = this.engine.patientCallCount;
-
-    // 1. Tratamento para chamadas consecutivas (Rechamadas)
-    if (count === 2) {
-      return `🔔 Segunda chamada para ${name}! Favor ir para o(a) ${local}.`;
-    }
-    if (count >= 3) {
-      return `⚠️ ATENÇÃO: Última chamada para ${name}! Por favor, vá para o(a) ${local} urgente! 🚪`;
-    }
-
-    // 2. Personalizações temáticas por tipo de Sala/Local
-    const localUpper = local.toUpperCase();
-    if (localUpper.includes('VACINA')) {
-      return `💉 Hora da gotinha ou vacina! ${name}, vá para a ${local}. Sem choro! 😉`;
-    }
-    if (localUpper.includes('ODONTO') || localUpper.includes('DENTISTA')) {
-      return `🪥 Cuidando do sorriso! ${name}, o consultório de dentista é o(a) ${local}.`;
-    }
-    if (localUpper.includes('PEDIATRIA') || localUpper.includes('PEDIATRA')) {
-      return `👶 Atenção ao pequeno: ${name}, favor se dirigir ao(à) ${local}.`;
-    }
-    if (localUpper.includes('CURATIVO')) {
-      return `🩹 Cuidado com o machucado! ${name}, dirija-se ao(à) ${local}.`;
-    }
-    if (localUpper.includes('TRIAGEM')) {
-      return `🩺 Medindo pressão e peso! ${name}, vá ao(à) ${local}.`;
-    }
-
-    // 3. Personalizações temáticas baseadas no Profissional de Saúde
-    if (prof && prof !== '-' && prof.length > 3) {
-      const profShort = prof.split(/\s+/).slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-      const rand = Math.random();
-      if (rand < 0.45) {
-        return `🚪 ${name}, o(a) ${profShort} já te espera na ${local}!`;
-      } else if (rand < 0.90) {
-        return `👩‍⚕️ Consulta com ${profShort}! Vá para o(a) ${local}, ${name}.`;
-      }
-    }
-
-    // 4. Falas gerais e engraçadas para primeira chamada
-    const templates = [
-      `✨ ${name}, sua vez! Dirija-se ao(à) ${local}. Boa sorte! 🍀`,
-      `🚪 O(A) ${local} está te chamando, ${name}! Foco na saúde. 🩺`,
-      `🏃‍♂️ Fila andou, ${name}! Corre lá no(a) ${local}.`,
-      `🌟 ${name}, saúde em primeiro lugar! Vá para o(a) ${local}.`
-    ];
-    return templates[Math.floor(Math.random() * templates.length)];
-  }
-
-  private getShortName(fullName: string): string {
-    if (!fullName) return '';
-    const nameParts = fullName.trim().split(/\s+/);
-    if (nameParts.length > 1) {
-      const format = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-      return `${format(nameParts[0])} ${format(nameParts[nameParts.length - 1])}`;
-    }
-    return fullName;
-  }
-
   // ==========================================================================
   // VETORES SVG DINÂMICOS
   // ==========================================================================
@@ -557,7 +491,7 @@ export class MascotRenderer {
         <path d="M37 34 Q40 37 43 34" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round" fill="none"/>
       `;
       mouth = `<path d="M30 39h4" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>`;
-    } 
+    }
     else if (state === 'TRIP') {
       eyes = `
         <path d="M22 31l5 5M27 31l-5 5" stroke="#1e293b" stroke-width="2.5" stroke-linecap="round"/>
@@ -613,7 +547,7 @@ export class MascotRenderer {
 
   private getRobozinhoSVG(state: MascotState, color: string): string {
     let ledEyes = '';
-    
+
     // Configurações de cores da carcaça do robô
     let baseColor = "#e2e8f0"; // Azul default
     let strokeColor = "#64748b";
@@ -637,7 +571,7 @@ export class MascotRenderer {
         <line x1="23" y1="25" x2="28" y2="25" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
         <line x1="36" y1="25" x2="41" y2="25" stroke="#1e3a8a" stroke-width="2" stroke-linecap="round"/>
       `;
-    } 
+    }
     else if (state === 'TRIP') {
       ledEyes = `
         <path d="M23 22l4 4M27 22l-4 4" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/>
@@ -705,7 +639,7 @@ export class MascotRenderer {
         <path d="M31 35 Q33 38 35 35" stroke="#1e293b" stroke-width="2" stroke-linecap="round" fill="none"/>
       `;
       mouth = `<path d="M26 38 Q27 38.5 28 38" stroke="#1e293b" stroke-width="1.2" stroke-linecap="round"/>`;
-    } 
+    }
     else if (state === 'TRIP') {
       eyes = `
         <path d="M19 32l3 3m0-3l-3 3" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>
