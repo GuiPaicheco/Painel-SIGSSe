@@ -1,6 +1,6 @@
 import { SigssPanelAdapter } from '../utils/sigssPanelAdapter';
 
-export type MascotState = 'IDLE' | 'WALK' | 'RUN' | 'JUMP' | 'FALL' | 'CLIMB' | 'SLEEP' | 'CELEBRATE';
+export type MascotState = 'IDLE' | 'WALK' | 'RUN' | 'JUMP' | 'FALL' | 'CLIMB' | 'SLEEP' | 'CELEBRATE' | 'TRIP' | 'STRETCH';
 export type MascotDirection = 'LEFT' | 'RIGHT' | 'UP' | 'DOWN';
 
 export interface MascotConfig {
@@ -11,11 +11,14 @@ export interface MascotConfig {
 }
 
 export class MascotEngine {
-  // Posição e velocidade
+  // Posição e velocidade real
   public x = 100;
   public y = 100;
-  private vx = 0;
-  private vy = 0;
+  public vx = 0;
+  public vy = 0;
+
+  // Velocidades alvo para inércia / aceleração suave
+  private targetVx = 0;
 
   // Tamanho do mascote
   public width = 64;
@@ -35,17 +38,23 @@ export class MascotEngine {
 
   // Física básica
   private gravity = 0.35;
-  private jumpForce = -9;
-  private normalSpeed = 1.2;
-  private runSpeed = 2.8;
-  private climbSpeed = 1.0;
+  private jumpForce = -8.5;
+  private normalSpeed = 1.1;
+  private runSpeed = 2.6;
+  private climbSpeed = 0.9;
+  private inertia = 0.15; // Fator de inércia para movimento suave (0.1 = muito suave, 1.0 = instantâneo)
 
   // Ciclo de comportamento
   private nextStateTime = 0;
+  private actionEndTime = 0;
   private celebrationEndTime = 0;
   private celebrationTargetX = 0;
   private celebrationTargetY = 0;
-  private isCelebrating = false;
+  public isCelebrating = false;
+  
+  // Dados de contexto das chamadas
+  public currentCalledPatient = '';
+  public lastAnnouncedHour = -1;
 
   // Callback de desenho
   private onUpdateCallback: () => void = () => {};
@@ -54,38 +63,30 @@ export class MascotEngine {
     this.resetToSafety();
   }
 
-  /**
-   * Redefine o mascote para uma posição segura (no chão principal) se ele se perder
-   */
   public resetToSafety() {
     this.x = window.innerWidth / 2;
     this.y = 50;
     this.vx = 0;
     this.vy = 2;
+    this.targetVx = 0;
     this.state = 'FALL';
+    this.isCelebrating = false;
   }
 
-  /**
-   * Atualiza as configurações do mascote em tempo real
-   */
   public updateConfig(newConfig: Partial<MascotConfig>) {
     this.config = { ...this.config, ...newConfig };
     this.width = this.config.size;
     this.height = this.config.size;
     
-    // Normalizar velocidade e física baseado no tamanho para manter a proporção
     const scale = this.config.size / 64;
     this.gravity = 0.35 * scale;
-    this.jumpForce = -9 * Math.sqrt(scale);
+    this.jumpForce = -8.5 * Math.sqrt(scale);
   }
 
   public getConfig(): MascotConfig {
     return this.config;
   }
 
-  /**
-   * Registra a função que será chamada a cada frame para renderizar o mascote
-   */
   public onUpdate(callback: () => void) {
     this.onUpdateCallback = callback;
   }
@@ -100,17 +101,41 @@ export class MascotEngine {
   }
 
   /**
-   * Trata o comportamento e as tomadas de decisão inteligentes do mascote
+   * Comportamento e tomadas de decisão inteligentes
    */
   private applyBehavior() {
     const now = Date.now();
 
-    // Se estiver celebrando uma chamada, o comportamento é focado
+    // Atualizar dados de contexto do painel em tempo real
+    this.updateContextData();
+
+    // 1. Tratamento do Estado Especial: Tropeçar (Trip)
+    if (this.state === 'TRIP') {
+      if (now > this.actionEndTime) {
+        this.state = 'IDLE';
+        this.nextStateTime = now + 1500;
+        this.targetVx = 0;
+      }
+      return;
+    }
+
+    // 2. Tratamento do Estado Especial: Alongar (Stretch)
+    if (this.state === 'STRETCH') {
+      if (now > this.actionEndTime) {
+        this.state = 'IDLE';
+        this.nextStateTime = now + 1000;
+        this.targetVx = 0;
+      }
+      return;
+    }
+
+    // 3. Tratamento de Comemoração de Nova Chamada
     if (this.isCelebrating) {
       if (now > this.celebrationEndTime) {
         this.isCelebrating = false;
         this.state = 'IDLE';
         this.nextStateTime = now + 2000;
+        this.targetVx = 0;
         return;
       }
 
@@ -118,122 +143,161 @@ export class MascotEngine {
       return;
     }
 
-    // Comportamento normal baseado em temporizador
+    // 4. Comportamento aleatório normal baseado em tempo
     if (now > this.nextStateTime) {
       this.decideNextState(now);
     }
   }
 
   /**
-   * Executa a movimentação direcionada de comemoração
+   * Mantém o mascote atualizado sobre o nome do paciente ativo e horas do relógio
+   */
+  private updateContextData() {
+    const elements = SigssPanelAdapter.getElements();
+    if (elements.patientName) {
+      this.currentCalledPatient = (elements.patientName.textContent || '').trim();
+    }
+    
+    const now = new Date();
+    this.lastAnnouncedHour = now.getHours();
+  }
+
+  /**
+   * Movimento direcionado quando há chamadas na UBS
    */
   private executeCelebrationBehavior() {
     const speed = this.runSpeed * this.config.speedMultiplier;
     
-    // Se está no ar, não pode tomar decisões de direção no chão
     if (this.state === 'JUMP' || this.state === 'FALL') {
       return;
     }
 
-    // Calcula a distância horizontal até o centro da chamada
+    // Distância horizontal até a caixa de chamada principal
     const dx = this.celebrationTargetX - (this.x + this.width / 2);
     
-    if (Math.abs(dx) > 40) {
-      // Corre na direção da chamada
+    if (Math.abs(dx) > 60) {
       this.state = 'RUN';
       if (dx > 0) {
-        this.vx = speed;
+        this.targetVx = speed;
         this.direction = 'RIGHT';
       } else {
-        this.vx = -speed;
+        this.targetVx = -speed;
         this.direction = 'LEFT';
       }
-    } else {
-      // Chegou perto da chamada! Executa pulos de alegria
-      this.state = 'CELEBRATE';
-      this.vx = 0;
       
-      // Pula se estiver no chão
-      if (this.y === this.getFloorLevelAt(this.x)) {
-        this.vy = this.jumpForce * 1.1; // Pulo mais alto de alegria
+      // Se bater em uma parede enquanto corre para comemorar, tenta pular
+      const floor = this.getFloorLevelAt(this.x);
+      const nextFloor = this.getFloorLevelAt(this.x + (dx > 0 ? 25 : -25));
+      if (nextFloor < floor - 20 && this.y >= floor - 5) {
+        this.vy = this.jumpForce * 1.05;
         this.state = 'JUMP';
-        // Pequena variação horizontal no pulo
-        this.vx = (Math.random() - 0.5) * 2;
+        this.targetVx = (dx > 0 ? speed : -speed) * 1.2;
+      }
+    } else {
+      // Chegou! Pula de alegria continuamente
+      this.state = 'CELEBRATE';
+      this.targetVx = 0;
+      
+      if (this.y === this.getFloorLevelAt(this.x)) {
+        this.vy = this.jumpForce * 1.15; // Super pulo
+        this.state = 'JUMP';
+        this.targetVx = (Math.random() - 0.5) * 2.5; // Leve zigue-zague no ar
       }
     }
   }
 
   /**
-   * Decide aleatoriamente qual será a próxima ação do mascote
+   * Decide aleatoriamente qual será a próxima ação
    */
   private decideNextState(now: number) {
     const rand = Math.random();
-    const duration = 2000 + Math.random() * 5000; // Dura de 2 a 7 segundos
+    const duration = 2500 + Math.random() * 4500; // 2.5s a 7s
     this.nextStateTime = now + duration;
 
-    // Se estiver no ar, continua caindo
+    // Se estiver caindo ou pulando, aguarda estabilizar
     if (this.state === 'JUMP' || this.state === 'FALL') {
       return;
     }
 
     const currentFloor = this.getFloorLevelAt(this.x);
 
-    // Se bater na parede lateral da tela, obriga a mudar de estado ou direção
-    if (this.x <= 0) {
+    // Evitar presas nas bordas da tela
+    if (this.x <= 15) {
       this.direction = 'RIGHT';
       this.state = 'WALK';
-      this.vx = this.normalSpeed * this.config.speedMultiplier;
+      this.targetVx = this.normalSpeed * this.config.speedMultiplier;
       return;
     }
-    if (this.x + this.width >= window.innerWidth) {
+    if (this.x + this.width >= window.innerWidth - 15) {
       this.direction = 'LEFT';
       this.state = 'WALK';
-      this.vx = -this.normalSpeed * this.config.speedMultiplier;
+      this.targetVx = -this.normalSpeed * this.config.speedMultiplier;
       return;
     }
 
+    // Probabilidades de Comportamento
     if (rand < 0.35) {
       // Caminhar
       this.state = 'WALK';
       const goRight = Math.random() > 0.5;
       this.direction = goRight ? 'RIGHT' : 'LEFT';
-      this.vx = (goRight ? this.normalSpeed : -this.normalSpeed) * this.config.speedMultiplier;
+      this.targetVx = (goRight ? this.normalSpeed : -this.normalSpeed) * this.config.speedMultiplier;
     } 
-    else if (rand < 0.50) {
+    else if (rand < 0.40) {
+      // Tropeçar (Trip) - Raro e engraçado
+      this.state = 'TRIP';
+      this.actionEndTime = now + 2000;
+      // Empurra o boneco um pouco na direção atual para simular escorregão
+      this.targetVx = (this.direction === 'RIGHT' ? this.normalSpeed : -this.normalSpeed) * 0.7;
+    }
+    else if (rand < 0.45) {
+      // Alongamento (Esticar pernas)
+      this.state = 'STRETCH';
+      this.actionEndTime = now + 2200;
+      this.targetVx = 0;
+    }
+    else if (rand < 0.60) {
       // Parado (Idle)
       this.state = 'IDLE';
-      this.vx = 0;
+      this.targetVx = 0;
     } 
-    else if (rand < 0.65) {
+    else if (rand < 0.70) {
       // Dormir (Sleep)
       this.state = 'SLEEP';
-      this.vx = 0;
+      this.targetVx = 0;
     } 
-    else if (rand < 0.75) {
+    else if (rand < 0.80) {
       // Pular (Jump)
       this.state = 'JUMP';
       this.vy = this.jumpForce;
-      // Define velocidade horizontal no pulo
-      this.vx = (Math.random() > 0.5 ? this.normalSpeed : -this.normalSpeed) * 1.5 * this.config.speedMultiplier;
+      const jumpDir = Math.random() > 0.5 ? 1 : -1;
+      this.targetVx = jumpDir * this.normalSpeed * 1.6 * this.config.speedMultiplier;
     }
-    else if (rand < 0.88) {
+    else if (rand < 0.90) {
       // Correr (Run)
       this.state = 'RUN';
       const goRight = Math.random() > 0.5;
       this.direction = goRight ? 'RIGHT' : 'LEFT';
-      this.vx = (goRight ? this.runSpeed : -this.runSpeed) * this.config.speedMultiplier;
+      this.targetVx = (goRight ? this.runSpeed : -this.runSpeed) * this.config.speedMultiplier;
     }
     else {
-      // Escalar parede lateral (Climb) se estiver perto da borda
-      if (this.x < 100 || this.x + this.width > window.innerWidth - 100) {
+      // Escalar se estiver encostado em algum box ou borda
+      const isNearLeftWall = this.x < 120;
+      const isNearRightWall = this.x + this.width > window.innerWidth - 120;
+      
+      if (isNearLeftWall || isNearRightWall) {
         this.state = 'CLIMB';
+        this.targetVx = 0;
         this.vx = 0;
         this.vy = -this.climbSpeed * this.config.speedMultiplier;
-        this.direction = this.x < 100 ? 'LEFT' : 'RIGHT'; // Vira de frente para a parede
+        this.direction = isNearLeftWall ? 'LEFT' : 'RIGHT';
       } else {
-        // Fallback para idle
-        this.state = 'IDLE';
-        this.vx = 0;
+        // Pulo em cima de um obstáculo próximo
+        this.state = 'JUMP';
+        this.vy = this.jumpForce * 1.1;
+        // Pula na direção do centro da tela para tentar subir no box
+        const centerDir = this.x < window.innerWidth / 2 ? 1 : -1;
+        this.targetVx = centerDir * this.normalSpeed * 1.8 * this.config.speedMultiplier;
       }
     }
   }
@@ -244,16 +308,14 @@ export class MascotEngine {
   public triggerCallReaction(patientName: string, local: string) {
     if (!this.config.callAwareness) return;
 
-    console.log(`Mascote detectou chamada: ${patientName} no local ${local}`);
-    
-    // Tenta encontrar as coordenadas da caixa de chamadas
+    this.currentCalledPatient = patientName;
     const elements = SigssPanelAdapter.getElements();
+    
     if (elements.callingCard) {
       const rect = elements.callingCard.getBoundingClientRect();
       this.celebrationTargetX = rect.left + rect.width / 2;
       this.celebrationTargetY = rect.top + rect.height / 2;
     } else {
-      // Fallback para o centro da tela
       this.celebrationTargetX = window.innerWidth / 2;
       this.celebrationTargetY = window.innerHeight / 2;
     }
@@ -262,30 +324,31 @@ export class MascotEngine {
     this.state = 'RUN';
     this.celebrationEndTime = Date.now() + 10000; // Comemora por 10 segundos
     
-    // Pequeno pulo de susto inicial se estiver no chão
+    // Pequeno pulo de susto se estiver assentado
     const floor = this.getFloorLevelAt(this.x);
     if (this.y >= floor - 5) {
-      this.vy = this.jumpForce * 0.8;
+      this.vy = this.jumpForce * 0.9;
       this.state = 'JUMP';
+      this.targetVx = (this.celebrationTargetX > this.x ? this.runSpeed : -this.runSpeed) * 0.5;
     }
   }
 
   /**
-   * Aplica a gravidade, acelerações, limites da tela e colisões com plataformas
+   * Aplica física com aceleração e desaceleração linear para movimentos orgânicos
    */
   private applyPhysics() {
     // 1. Caso esteja escalando
     if (this.state === 'CLIMB') {
       this.y += this.vy;
       
-      // Impede de subir além do topo da tela
+      // Solta da parede no topo da tela
       if (this.y < 0) {
         this.y = 0;
         this.state = 'IDLE';
         this.vy = 0;
       }
       
-      // Se chegar na base da tela, para de escalar
+      // Chegou no chão, para de escalar
       const floor = this.getFloorLevelAt(this.x);
       if (this.y >= floor) {
         this.y = floor;
@@ -295,50 +358,60 @@ export class MascotEngine {
       return;
     }
 
-    // 2. Gravidade
+    // 2. Aplicação de Inércia Horizontal (Aceleração suave)
+    // Se tropeçar, a velocidade cai lentamente no chão simulando atrito
+    if (this.state === 'TRIP') {
+      this.vx += (0 - this.vx) * 0.08;
+    } else {
+      this.vx += (this.targetVx - this.vx) * this.inertia;
+    }
+
+    // 3. Gravidade
     const currentFloor = this.getFloorLevelAt(this.x);
     
     if (this.y < currentFloor) {
-      // Está no ar
       this.vy += this.gravity;
       if (this.state !== 'JUMP') {
         this.state = 'FALL';
       }
     }
 
-    // 3. Atualiza coordenadas
+    // 4. Atualização das coordenadas de acordo com as velocidades
     this.x += this.vx;
     this.y += this.vy;
 
-    // 4. Limites de colisão horizontais (Laterais da tela)
+    // 5. Colisão Lateral Inteligente (Bate e vira / quica)
     if (this.x < 0) {
       this.x = 0;
-      this.vx = -this.vx * 0.5; // Bate e quica levemente
+      this.vx = -this.vx * 0.4;
+      this.targetVx = -this.targetVx;
       this.direction = 'RIGHT';
     } else if (this.x + this.width > window.innerWidth) {
       this.x = window.innerWidth - this.width;
-      this.vx = -this.vx * 0.5;
+      this.vx = -this.vx * 0.4;
+      this.targetVx = -this.targetVx;
       this.direction = 'LEFT';
     }
 
-    // 5. Colisão e aterrissagem no chão ativo
+    // 6. Colisão com o Chão / Plataformas
     const updatedFloor = this.getFloorLevelAt(this.x);
     if (this.y >= updatedFloor) {
+      const isLanding = this.state === 'FALL' || this.state === 'JUMP';
       this.y = updatedFloor;
       this.vy = 0;
       
-      if (this.state === 'FALL' || this.state === 'JUMP') {
-        // Amortece o impacto e decide próxima ação rapidamente
-        this.vx = 0;
+      if (isLanding) {
+        this.targetVx = 0;
+        this.vx = this.vx * 0.3; // Desacelera ao aterrissar
         this.state = 'IDLE';
-        this.nextStateTime = Date.now() + 1000;
+        this.nextStateTime = Date.now() + 800; // Espera um pouquinho ao cair
       }
     }
   }
 
   /**
-   * Calcula qual é o "chão" atual na coordenada X especificada.
-   * O mascote pode caminhar no topo dos boxes (callingCard e historySection) se cair sobre eles.
+   * Retorna a coordenada Y do "chão" na posição X.
+   * O mascote pode pousar e andar no topo do card principal e da barra lateral de histórico.
    */
   private getFloorLevelAt(x: number): number {
     const elements = SigssPanelAdapter.getElements();
@@ -351,23 +424,23 @@ export class MascotEngine {
       defaultFloor = footerRect.top - this.height;
     }
 
-    // Se estiver sobre a caixa de histórico lateral (Aside)
+    // Plataforma A: Caixa de Histórico lateral
     if (elements.historySection) {
       const histRect = elements.historySection.getBoundingClientRect();
       if (mascotCenterX >= histRect.left && mascotCenterX <= histRect.right) {
-        // Se o mascote estiver caindo do topo ou já em cima dela
-        if (this.y + this.height <= histRect.top + 15 && this.vy >= 0) {
+        // Pousa se vier por cima (com tolerância de 18px)
+        if (this.y + this.height <= histRect.top + 18 && this.vy >= 0) {
           return histRect.top - this.height;
         }
       }
     }
 
-    // Se estiver sobre o card principal de chamadas
+    // Plataforma B: Card grande de chamada ativa
     if (elements.callingCard) {
       const cardRect = elements.callingCard.getBoundingClientRect();
       if (mascotCenterX >= cardRect.left && mascotCenterX <= cardRect.right) {
-        // Se o mascote estiver vindo por cima da caixa
-        if (this.y + this.height <= cardRect.top + 15 && this.vy >= 0) {
+        // Pousa se vier por cima (com tolerância de 18px)
+        if (this.y + this.height <= cardRect.top + 18 && this.vy >= 0) {
           return cardRect.top - this.height;
         }
       }
