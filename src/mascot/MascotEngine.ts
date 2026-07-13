@@ -54,6 +54,9 @@ export class MascotEngine {
   
   // Dados de contexto das chamadas e histórico
   public currentCalledPatient = '';
+  public currentLocal = '';
+  public currentProfessional = '';
+  public patientCallCount = 1;
   public lastAnnouncedHour = -1;
   public pastPatients: string[] = []; // Nomes curtos das últimas pessoas chamadas
 
@@ -195,15 +198,10 @@ export class MascotEngine {
         this.targetVx = (dx > 0 ? speed : -speed) * 1.2;
       }
     } else {
-      // Chegou! Pula de alegria continuamente
+      // Chegou! Fica parado comemorando de forma amigável (sem pular ou tremer)
       this.state = 'CELEBRATE';
       this.targetVx = 0;
-      
-      if (this.y === this.getFloorLevelAt(this.x)) {
-        this.vy = this.jumpForce * 1.15; // Super pulo
-        this.state = 'JUMP';
-        this.targetVx = (Math.random() - 0.5) * 2.5; // Leve zigue-zague no ar
-      }
+      this.vx = 0;
     }
   }
 
@@ -296,10 +294,19 @@ export class MascotEngine {
    * Dispara a comemoração de chamada de paciente de forma imediata.
    * Adiciona o paciente ao histórico de chamadas recentes.
    */
-  public triggerCallReaction(patientName: string, local: string) {
+  public triggerCallReaction(patientName: string, local: string, professional: string) {
     if (!this.config.callAwareness) return;
 
-    this.currentCalledPatient = patientName;
+    if (patientName === this.currentCalledPatient) {
+      this.patientCallCount++;
+    } else {
+      this.currentCalledPatient = patientName;
+      this.patientCallCount = 1;
+    }
+
+    this.currentLocal = local;
+    this.currentProfessional = professional;
+
     const elements = SigssPanelAdapter.getElements();
     
     // Adicionar nome curto do paciente ao histórico de comemorações passadas
@@ -321,10 +328,11 @@ export class MascotEngine {
     }
 
     this.isCelebrating = true;
-    this.celebrationEndTime = Date.now() + 10000;
+    this.celebrationEndTime = Date.now() + 18000; // Exibe o anúncio por 18 segundos completos
     
     this.actionEndTime = 0;
     
+    // Impulso inicial (pulo simples) em direção ao card
     this.vy = this.jumpForce * 1.1;
     this.state = 'JUMP';
     

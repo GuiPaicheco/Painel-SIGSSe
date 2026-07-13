@@ -173,11 +173,12 @@ class SIGSSMascotCore {
       ) {
         console.log(`Painel SIGSS+ Mascote: Nova chamada detectada via MutationObserver: ${currentText}`);
         this.lastCalledPatient = currentText;
-        const local = elements.localName?.textContent || '';
+        const local = (elements.localName?.textContent || '').trim();
+        const professional = (elements.professionalName?.textContent || '').trim();
 
         // Notificar todos os mascotes ativos
         this.mascots.forEach(m => {
-          m.engine.triggerCallReaction(currentText, local);
+          m.engine.triggerCallReaction(currentText, local, professional);
         });
       }
     });

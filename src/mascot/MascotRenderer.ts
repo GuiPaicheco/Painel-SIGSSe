@@ -178,16 +178,9 @@ export class MascotRenderer {
 
     const now = Date.now();
 
-    // 1. Reação a chamada
-    if (this.engine.state === 'CELEBRATE' || (this.engine.state === 'RUN' && this.engine.isCelebrating && callAwareness)) {
-      let patientGreet = "📢 Nova chamada!";
-      if (this.engine.currentCalledPatient && this.engine.currentCalledPatient !== '-') {
-        // Encurtar nome completo
-        const nameParts = this.engine.currentCalledPatient.split(/\s+/);
-        const format = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-        const shortName = nameParts.length > 1 ? `${format(nameParts[0])} ${format(nameParts[nameParts.length - 1])}` : format(nameParts[0]);
-        patientGreet = `✨ Boa consulta, ${shortName}! 🍀`;
-      }
+    // 1. Reação a chamada (Alta Prioridade - Exibe imediatamente no primeiro frame)
+    if (this.engine.isCelebrating && callAwareness) {
+      const patientGreet = this.getPersonalizedCallMessage();
       this.setBalloonText(patientGreet, true);
       return;
     }
@@ -451,13 +444,12 @@ export class MascotRenderer {
       }
 
       .state-celebrate svg {
-        animation: mascotCelebrate 0.45s ease-in-out infinite;
+        animation: mascotCelebrate 0.8s ease-in-out infinite alternate;
       }
 
       @keyframes mascotCelebrate {
-        0% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-16px) rotate(180deg) scale(1.1); }
-        100% { transform: translateY(0) rotate(360deg); }
+        0% { transform: translateY(0) scaleY(1); }
+        100% { transform: translateY(-6px) scaleY(1.04); }
       }
 
       .state-trip {
@@ -483,6 +475,72 @@ export class MascotRenderer {
       }
     `;
     (document.head || document.documentElement).appendChild(style);
+  }
+
+  /**
+   * Constrói dinamicamente uma fala personalizada para a chamada ativa do painel
+   */
+  private getPersonalizedCallMessage(): string {
+    const name = this.getShortName(this.engine.currentCalledPatient);
+    const local = this.engine.currentLocal || 'Consultório';
+    const prof = this.engine.currentProfessional || 'Profissional';
+    const count = this.engine.patientCallCount;
+
+    // 1. Tratamento para chamadas consecutivas (Rechamadas)
+    if (count === 2) {
+      return `🔔 Segunda chamada para ${name}! Favor ir para o(a) ${local}.`;
+    }
+    if (count >= 3) {
+      return `⚠️ ATENÇÃO: Última chamada para ${name}! Por favor, vá para o(a) ${local} urgente! 🚪`;
+    }
+
+    // 2. Personalizações temáticas por tipo de Sala/Local
+    const localUpper = local.toUpperCase();
+    if (localUpper.includes('VACINA')) {
+      return `💉 Hora da gotinha ou vacina! ${name}, vá para a ${local}. Sem choro! 😉`;
+    }
+    if (localUpper.includes('ODONTO') || localUpper.includes('DENTISTA')) {
+      return `🪥 Cuidando do sorriso! ${name}, o consultório de dentista é o(a) ${local}.`;
+    }
+    if (localUpper.includes('PEDIATRIA') || localUpper.includes('PEDIATRA')) {
+      return `👶 Atenção ao pequeno: ${name}, favor se dirigir ao(à) ${local}.`;
+    }
+    if (localUpper.includes('CURATIVO')) {
+      return `🩹 Cuidado com o machucado! ${name}, dirija-se ao(à) ${local}.`;
+    }
+    if (localUpper.includes('TRIAGEM')) {
+      return `🩺 Medindo pressão e peso! ${name}, vá ao(à) ${local}.`;
+    }
+
+    // 3. Personalizações temáticas baseadas no Profissional de Saúde
+    if (prof && prof !== '-' && prof.length > 3) {
+      const profShort = prof.split(/\s+/).slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      const rand = Math.random();
+      if (rand < 0.45) {
+        return `🚪 ${name}, o(a) ${profShort} já te espera na ${local}!`;
+      } else if (rand < 0.90) {
+        return `👩‍⚕️ Consulta com ${profShort}! Vá para o(a) ${local}, ${name}.`;
+      }
+    }
+
+    // 4. Falas gerais e engraçadas para primeira chamada
+    const templates = [
+      `✨ ${name}, sua vez! Dirija-se ao(à) ${local}. Boa sorte! 🍀`,
+      `🚪 O(A) ${local} está te chamando, ${name}! Foco na saúde. 🩺`,
+      `🏃‍♂️ Fila andou, ${name}! Corre lá no(a) ${local}.`,
+      `🌟 ${name}, saúde em primeiro lugar! Vá para o(a) ${local}.`
+    ];
+    return templates[Math.floor(Math.random() * templates.length)];
+  }
+
+  private getShortName(fullName: string): string {
+    if (!fullName) return '';
+    const nameParts = fullName.trim().split(/\s+/);
+    if (nameParts.length > 1) {
+      const format = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+      return `${format(nameParts[0])} ${format(nameParts[nameParts.length - 1])}`;
+    }
+    return fullName;
   }
 
   // ==========================================================================

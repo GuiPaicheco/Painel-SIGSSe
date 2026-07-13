@@ -134,6 +134,9 @@
     isCelebrating = false;
     // Dados de contexto das chamadas e histórico
     currentCalledPatient = "";
+    currentLocal = "";
+    currentProfessional = "";
+    patientCallCount = 1;
     lastAnnouncedHour = -1;
     pastPatients = [];
     // Nomes curtos das últimas pessoas chamadas
@@ -250,11 +253,7 @@
       } else {
         this.state = "CELEBRATE";
         this.targetVx = 0;
-        if (this.y === this.getFloorLevelAt(this.x)) {
-          this.vy = this.jumpForce * 1.15;
-          this.state = "JUMP";
-          this.targetVx = (Math.random() - 0.5) * 2.5;
-        }
+        this.vx = 0;
       }
     }
     /**
@@ -330,9 +329,16 @@
      * Dispara a comemoração de chamada de paciente de forma imediata.
      * Adiciona o paciente ao histórico de chamadas recentes.
      */
-    triggerCallReaction(patientName, local) {
+    triggerCallReaction(patientName, local, professional) {
       if (!this.config.callAwareness) return;
-      this.currentCalledPatient = patientName;
+      if (patientName === this.currentCalledPatient) {
+        this.patientCallCount++;
+      } else {
+        this.currentCalledPatient = patientName;
+        this.patientCallCount = 1;
+      }
+      this.currentLocal = local;
+      this.currentProfessional = professional;
       const elements = SigssPanelAdapter.getElements();
       const shortName = this.getShortName(patientName);
       if (shortName && !this.pastPatients.includes(shortName)) {
@@ -350,7 +356,7 @@
         this.celebrationTargetY = window.innerHeight / 2;
       }
       this.isCelebrating = true;
-      this.celebrationEndTime = Date.now() + 1e4;
+      this.celebrationEndTime = Date.now() + 18e3;
       this.actionEndTime = 0;
       this.vy = this.jumpForce * 1.1;
       this.state = "JUMP";
@@ -600,14 +606,8 @@
     updateBalloon(callAwareness) {
       if (!this.balloonEl) return;
       const now = Date.now();
-      if (this.engine.state === "CELEBRATE" || this.engine.state === "RUN" && this.engine.isCelebrating && callAwareness) {
-        let patientGreet = "\u{1F4E2} Nova chamada!";
-        if (this.engine.currentCalledPatient && this.engine.currentCalledPatient !== "-") {
-          const nameParts = this.engine.currentCalledPatient.split(/\s+/);
-          const format = (str) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-          const shortName = nameParts.length > 1 ? `${format(nameParts[0])} ${format(nameParts[nameParts.length - 1])}` : format(nameParts[0]);
-          patientGreet = `\u2728 Boa consulta, ${shortName}! \u{1F340}`;
-        }
+      if (this.engine.isCelebrating && callAwareness) {
+        const patientGreet = this.getPersonalizedCallMessage();
         this.setBalloonText(patientGreet, true);
         return;
       }
@@ -848,13 +848,12 @@
       }
 
       .state-celebrate svg {
-        animation: mascotCelebrate 0.45s ease-in-out infinite;
+        animation: mascotCelebrate 0.8s ease-in-out infinite alternate;
       }
 
       @keyframes mascotCelebrate {
-        0% { transform: translateY(0) rotate(0deg); }
-        50% { transform: translateY(-16px) rotate(180deg) scale(1.1); }
-        100% { transform: translateY(0) rotate(360deg); }
+        0% { transform: translateY(0) scaleY(1); }
+        100% { transform: translateY(-6px) scaleY(1.04); }
       }
 
       .state-trip {
@@ -880,6 +879,62 @@
       }
     `;
       (document.head || document.documentElement).appendChild(style);
+    }
+    /**
+     * Constrói dinamicamente uma fala personalizada para a chamada ativa do painel
+     */
+    getPersonalizedCallMessage() {
+      const name = this.getShortName(this.engine.currentCalledPatient);
+      const local = this.engine.currentLocal || "Consult\xF3rio";
+      const prof = this.engine.currentProfessional || "Profissional";
+      const count = this.engine.patientCallCount;
+      if (count === 2) {
+        return `\u{1F514} Segunda chamada para ${name}! Favor ir para o(a) ${local}.`;
+      }
+      if (count >= 3) {
+        return `\u26A0\uFE0F ATEN\xC7\xC3O: \xDAltima chamada para ${name}! Por favor, v\xE1 para o(a) ${local} urgente! \u{1F6AA}`;
+      }
+      const localUpper = local.toUpperCase();
+      if (localUpper.includes("VACINA")) {
+        return `\u{1F489} Hora da gotinha ou vacina! ${name}, v\xE1 para a ${local}. Sem choro! \u{1F609}`;
+      }
+      if (localUpper.includes("ODONTO") || localUpper.includes("DENTISTA")) {
+        return `\u{1FAA5} Cuidando do sorriso! ${name}, o consult\xF3rio de dentista \xE9 o(a) ${local}.`;
+      }
+      if (localUpper.includes("PEDIATRIA") || localUpper.includes("PEDIATRA")) {
+        return `\u{1F476} Aten\xE7\xE3o ao pequeno: ${name}, favor se dirigir ao(\xE0) ${local}.`;
+      }
+      if (localUpper.includes("CURATIVO")) {
+        return `\u{1FA79} Cuidado com o machucado! ${name}, dirija-se ao(\xE0) ${local}.`;
+      }
+      if (localUpper.includes("TRIAGEM")) {
+        return `\u{1FA7A} Medindo press\xE3o e peso! ${name}, v\xE1 ao(\xE0) ${local}.`;
+      }
+      if (prof && prof !== "-" && prof.length > 3) {
+        const profShort = prof.split(/\s+/).slice(0, 2).map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(" ");
+        const rand = Math.random();
+        if (rand < 0.45) {
+          return `\u{1F6AA} ${name}, o(a) ${profShort} j\xE1 te espera na ${local}!`;
+        } else if (rand < 0.9) {
+          return `\u{1F469}\u200D\u2695\uFE0F Consulta com ${profShort}! V\xE1 para o(a) ${local}, ${name}.`;
+        }
+      }
+      const templates = [
+        `\u2728 ${name}, sua vez! Dirija-se ao(\xE0) ${local}. Boa sorte! \u{1F340}`,
+        `\u{1F6AA} O(A) ${local} est\xE1 te chamando, ${name}! Foco na sa\xFAde. \u{1FA7A}`,
+        `\u{1F3C3}\u200D\u2642\uFE0F Fila andou, ${name}! Corre l\xE1 no(a) ${local}.`,
+        `\u{1F31F} ${name}, sa\xFAde em primeiro lugar! V\xE1 para o(a) ${local}.`
+      ];
+      return templates[Math.floor(Math.random() * templates.length)];
+    }
+    getShortName(fullName) {
+      if (!fullName) return "";
+      const nameParts = fullName.trim().split(/\s+/);
+      if (nameParts.length > 1) {
+        const format = (str) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
+        return `${format(nameParts[0])} ${format(nameParts[nameParts.length - 1])}`;
+      }
+      return fullName;
     }
     // ==========================================================================
     // VETORES SVG DINÂMICOS
@@ -1236,9 +1291,10 @@
         if (currentText && currentText !== "-" && currentText.length > 2 && currentText !== this.lastCalledPatient) {
           console.log(`Painel SIGSS+ Mascote: Nova chamada detectada via MutationObserver: ${currentText}`);
           this.lastCalledPatient = currentText;
-          const local = elements.localName?.textContent || "";
+          const local = (elements.localName?.textContent || "").trim();
+          const professional = (elements.professionalName?.textContent || "").trim();
           this.mascots.forEach((m) => {
-            m.engine.triggerCallReaction(currentText, local);
+            m.engine.triggerCallReaction(currentText, local, professional);
           });
         }
       });
