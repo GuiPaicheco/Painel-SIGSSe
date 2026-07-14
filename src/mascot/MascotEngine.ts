@@ -155,14 +155,6 @@ export class MascotEngine {
   }
 
   private updateContextData() {
-    const elements = SigssPanelAdapter.getElements();
-    if (elements.patientName) {
-      const text = (elements.patientName.textContent || '').trim();
-      if (text && text !== '-' && text !== this.currentCalledPatient && text.length > 2) {
-        this.currentCalledPatient = text;
-      }
-    }
-    
     const now = new Date();
     this.lastAnnouncedHour = now.getHours();
   }

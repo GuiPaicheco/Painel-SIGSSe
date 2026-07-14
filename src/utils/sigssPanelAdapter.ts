@@ -3,17 +3,17 @@
  * 
  * Este arquivo abstrai as consultas ao DOM do painel oficial de chamadas
  * e do painel de simulação local. Ele usa heurísticas avançadas de detecção
- * para encontrar o paciente chamado, local e profissional, tornando a
- * extensão imune a mudanças de seletores do sistema MV.
+ * baseadas em rótulos e colunas para evitar a fusão entre o chamado ativo
+ * e o histórico de últimas chamadas.
  */
 
 export interface PanelElements {
-  callingCard: HTMLElement | null;      // O card grande de chamada ativa
+  callingCard: HTMLElement | null;      // O card/coluna de chamada ativa
   patientName: HTMLElement | null;      // Onde fica o nome do paciente chamado
   localName: HTMLElement | null;        // Sala / Guichê
   professionalName: HTMLElement | null; // Nome do médico / enfermeiro
   historySection: HTMLElement | null;    // Container do histórico lateral
-  footerTicker: HTMLElement | null;      // O rodapé (geralmente com letreiro)
+  footerTicker: HTMLElement | null;      // O rodapé
 }
 
 export class SigssPanelAdapter {
@@ -32,9 +32,6 @@ export class SigssPanelAdapter {
     );
   }
 
-  /**
-   * Verifica por heurística se há indícios de um painel de chamadas ativo
-   */
   private static hasCalledPatientHeuristic(): boolean {
     const bodyText = document.body.innerText.toUpperCase();
     return bodyText.includes('CHAMANDO') || bodyText.includes('ÚLTIMAS CHAMADAS') || bodyText.includes('HISTÓRICO');
@@ -44,95 +41,130 @@ export class SigssPanelAdapter {
    * Retorna os elementos do painel usando seletores diretos e heurísticas estruturais de segurança
    */
   static getElements(): PanelElements {
-    // 1. Seleção por seletores diretos (Mock/Simulator e padrões comuns)
-    const elements: PanelElements = {
-      callingCard: document.querySelector('.calling-card, .chamando-card, .painel-chamando, [class*="chamando-card"]'),
-      patientName: document.querySelector('#current-patient, .called-patient, .chamando-paciente, .paciente-chamado, [class*="called-patient"]'),
-      localName: document.querySelector('#current-local, .called-local, .chamando-local, .sala-chamada, [class*="called-local"]'),
-      professionalName: document.querySelector('#current-professional, .called-professional, .chamando-profissional, [class*="called-professional"]'),
-      historySection: document.querySelector('.history-section, .ultimas-chamadas, aside.history, .painel-historico, [class*="history"]'),
-      footerTicker: document.querySelector('.panel-footer, footer, .footer-ticker, .marquee-container, marquee')
-    };
+    // 1. Tentar identificar a seção de histórico primeiro para podermos excluí-la de buscas ativas
+    const historySection = document.querySelector(
+      '.history-section, .ultimas-chamadas, aside.history, .painel-historico, [class*="history"], [class*="sidebar"]'
+    ) as HTMLElement | null;
 
-    // 2. Se falhar, busca por heurísticas de tags e textos na página real
-    if (!elements.callingCard) {
-      // O card de chamada geralmente é a maior seção ou div visível na metade esquerda da tela
-      const divs = Array.from(document.querySelectorAll('div, section'));
-      let largestDiv: HTMLElement | null = null;
-      let largestArea = 0;
-      
-      divs.forEach(div => {
-        const rect = div.getBoundingClientRect();
-        const area = rect.width * rect.height;
-        if (rect.width > 200 && rect.height > 200 && rect.left < window.innerWidth * 0.75 && area > largestArea) {
-          largestArea = area;
-          largestDiv = div as HTMLElement;
-        }
-      });
-      elements.callingCard = largestDiv;
-    }
+    // 2. Identificar a coluna/card de chamada ativa ("CHAMANDO")
+    let callingCard = document.querySelector(
+      '.calling-card, .chamando-card, .painel-chamando, [class*="chamando-card"]'
+    ) as HTMLElement | null;
 
-    // 3. Heurística para encontrar o nome do paciente chamado (uppercase, fonte grande, sem números)
-    if (!elements.patientName && elements.callingCard) {
-      elements.patientName = this.findLargeUppercaseTextIn(elements.callingCard, ['CHAMANDO', 'PACIENTE', '-']);
-    } else if (!elements.patientName) {
-      // Varre o body inteiro se não achou o card
-      elements.patientName = this.findLargeUppercaseTextIn(document.body, ['CHAMANDO', 'PACIENTE', '-']);
-    }
-
-    // 4. Heurística para encontrar a Sala / Local
-    if (!elements.localName && elements.callingCard) {
-      // Procura textos contendo "SALA", "GUICHÊ", "CONSULTÓRIO" ou simplesmente caixa de texto menor que o paciente
-      const childElements = Array.from(elements.callingCard.querySelectorAll('span, div, h1, h2, h3, p'));
-      for (const el of childElements) {
+    if (!callingCard) {
+      // Procurar o cabeçalho/rótulo "CHAMANDO"
+      const allDivs = Array.from(document.querySelectorAll('div, section, td, th, h1, h2, h3, p, span'));
+      let chamandoHeader: HTMLElement | null = null;
+      for (const el of allDivs) {
         const text = (el.textContent || '').trim().toUpperCase();
-        if (text.includes('SALA') || text.includes('GUICHE') || text.includes('GUICHÊ') || text.includes('CONSULTORIO') || text.includes('CONSULTÓRIO')) {
-          elements.localName = el as HTMLElement;
+        if (text === 'CHAMANDO' || text === 'CHAMANDO ATIVA' || text === 'PACIENTE CHAMADO') {
+          chamandoHeader = el as HTMLElement;
           break;
         }
       }
-    }
 
-    return elements;
-  }
-
-  /**
-   * Helper que encontra elementos com textos em maiúsculo de grande tamanho
-   */
-  private static findLargeUppercaseTextIn(root: HTMLElement, excludeWords: string[]): HTMLElement | null {
-    const childElements = Array.from(root.querySelectorAll('span, div, h1, h2, h3, p, td'));
-    let bestMatch: HTMLElement | null = null;
-    let maxFontSize = 0;
-
-    for (const el of childElements) {
-      const text = (el.textContent || '').trim();
-      
-      // Validações:
-      // - Deve possuir texto com mais de 3 caracteres
-      // - Deve conter apenas letras maiúsculas e espaços (nomes de pessoas)
-      // - Deve ter pelo menos um espaço (ex: nome e sobrenome)
-      // - Não pode estar nas palavras excluídas
-      if (
-        text.length > 4 && 
-        /^[A-Z\s\u00C0-\u00FF]+$/.test(text) && 
-        text.includes(' ') &&
-        !excludeWords.some(w => text.includes(w)) &&
-        !text.includes('PREFEITURA') &&
-        !text.includes('SECRETARIA') &&
-        !text.includes('SAUDE') &&
-        !text.includes('SAÚDE') &&
-        !text.includes('BETIM')
-      ) {
-        const style = window.getComputedStyle(el);
-        const fontSize = parseFloat(style.fontSize);
-        if (fontSize > maxFontSize) {
-          maxFontSize = fontSize;
-          bestMatch = el as HTMLElement;
+      if (chamandoHeader) {
+        // Subir no DOM a partir do cabeçalho para achar a coluna da esquerda (container da chamada)
+        let parent = chamandoHeader.parentElement;
+        while (parent && parent !== document.body) {
+          const rect = parent.getBoundingClientRect();
+          // O container deve ter tamanho razoável e não ocupar toda a tela
+          if (rect.width > 200 && rect.width < window.innerWidth * 0.8) {
+            callingCard = parent;
+            break;
+          }
+          parent = parent.parentElement;
         }
       }
     }
 
-    return bestMatch;
+    // Se ainda assim não achar, usa a metade esquerda da tela como fallback de busca
+    const searchRoot = callingCard || document.body;
+
+    // 3. Buscar os campos de chamada ativa usando seletores diretos
+    let patientName = document.querySelector('#current-patient, .called-patient, .chamando-paciente, .paciente-chamado') as HTMLElement | null;
+    let localName = document.querySelector('#current-local, .called-local, .chamando-local, .sala-chamada') as HTMLElement | null;
+    let professionalName = document.querySelector('#current-professional, .called-professional, .chamando-profissional') as HTMLElement | null;
+
+    // 4. Se falhar nos seletores diretos, aplica heurística de rótulos (Busca do valor abaixo do texto explicativo)
+    if (!patientName) {
+      patientName = this.findValueByLabelHeuristic(searchRoot, ['PACIENTE'], historySection);
+    }
+    if (!localName) {
+      localName = this.findValueByLabelHeuristic(searchRoot, ['LOCAL', 'SALA', 'GUICHÊ', 'GUICHE'], historySection);
+    }
+    if (!professionalName) {
+      professionalName = this.findValueByLabelHeuristic(searchRoot, ['PROFISSIONAL', 'MÉDICO', 'MEDICO', 'ENFERMEIRO'], historySection);
+    }
+
+    return {
+      callingCard,
+      patientName,
+      localName,
+      professionalName,
+      historySection,
+      footerTicker: document.querySelector('.panel-footer, footer, .footer-ticker, marquee')
+    };
+  }
+
+  /**
+   * Encontra um elemento de valor que está posicionado após/abaixo de um rótulo explicativo
+   */
+  private static findValueByLabelHeuristic(
+    root: HTMLElement, 
+    labelKeywords: string[], 
+    excludeContainer: HTMLElement | null
+  ): HTMLElement | null {
+    // Buscar todos os elementos de texto possíveis dentro do container de busca
+    const all = Array.from(root.querySelectorAll('span, div, h1, h2, h3, p, td, th, b, strong, label'));
+    
+    for (let i = 0; i < all.length; i++) {
+      const el = all[i] as HTMLElement;
+      
+      // Ignorar se estiver contido no container excluído (ex: histórico lateral)
+      if (excludeContainer && excludeContainer.contains(el)) {
+        continue;
+      }
+
+      const text = (el.textContent || '').trim().toUpperCase();
+      
+      // Verifica se o texto é exatamente o rótulo (ex: "PACIENTE") ou começa com ele
+      const matchesLabel = labelKeywords.some(keyword => 
+        text === keyword || 
+        text.startsWith(keyword + ':') || 
+        text.startsWith(keyword + ' ')
+      );
+
+      if (matchesLabel) {
+        // Encontramos o rótulo. Procuramos o próximo elemento folha com conteúdo textual
+        for (let j = i + 1; j < all.length; j++) {
+          const valEl = all[j] as HTMLElement;
+          
+          if (excludeContainer && excludeContainer.contains(valEl)) {
+            continue;
+          }
+
+          const valText = (valEl.textContent || '').trim();
+
+          // Critérios de validação do valor:
+          // - Não pode ser vazio ou apenas hífen
+          // - Deve ser um nó folha (para não capturar blocos contendo múltiplos textos repetidos)
+          // - Não deve ser outro rótulo explicativo
+          if (
+            valText && 
+            valText !== '-' && 
+            valEl.children.length === 0 &&
+            !labelKeywords.some(k => valText.toUpperCase().includes(k)) &&
+            !valText.toUpperCase().includes('PACIENTE') &&
+            !valText.toUpperCase().includes('LOCAL') &&
+            !valText.toUpperCase().includes('PROFISSIONAL')
+          ) {
+            return valEl;
+          }
+        }
+      }
+    }
+    return null;
   }
 
   /**

@@ -9,9 +9,6 @@
       const url = window.location.href;
       return url.includes("unique-panel/panel-screen") || url.includes("mock_panel.html") || document.title.toLowerCase().includes("painel") || !!document.querySelector(".called-patient, #current-patient, .panel-container") || this.hasCalledPatientHeuristic();
     }
-    /**
-     * Verifica por heurística se há indícios de um painel de chamadas ativo
-     */
     static hasCalledPatientHeuristic() {
       const bodyText = document.body.innerText.toUpperCase();
       return bodyText.includes("CHAMANDO") || bodyText.includes("\xDALTIMAS CHAMADAS") || bodyText.includes("HIST\xD3RICO");
@@ -20,64 +17,84 @@
      * Retorna os elementos do painel usando seletores diretos e heurísticas estruturais de segurança
      */
     static getElements() {
-      const elements = {
-        callingCard: document.querySelector('.calling-card, .chamando-card, .painel-chamando, [class*="chamando-card"]'),
-        patientName: document.querySelector('#current-patient, .called-patient, .chamando-paciente, .paciente-chamado, [class*="called-patient"]'),
-        localName: document.querySelector('#current-local, .called-local, .chamando-local, .sala-chamada, [class*="called-local"]'),
-        professionalName: document.querySelector('#current-professional, .called-professional, .chamando-profissional, [class*="called-professional"]'),
-        historySection: document.querySelector('.history-section, .ultimas-chamadas, aside.history, .painel-historico, [class*="history"]'),
-        footerTicker: document.querySelector(".panel-footer, footer, .footer-ticker, .marquee-container, marquee")
-      };
-      if (!elements.callingCard) {
-        const divs = Array.from(document.querySelectorAll("div, section"));
-        let largestDiv = null;
-        let largestArea = 0;
-        divs.forEach((div) => {
-          const rect = div.getBoundingClientRect();
-          const area = rect.width * rect.height;
-          if (rect.width > 200 && rect.height > 200 && rect.left < window.innerWidth * 0.75 && area > largestArea) {
-            largestArea = area;
-            largestDiv = div;
-          }
-        });
-        elements.callingCard = largestDiv;
-      }
-      if (!elements.patientName && elements.callingCard) {
-        elements.patientName = this.findLargeUppercaseTextIn(elements.callingCard, ["CHAMANDO", "PACIENTE", "-"]);
-      } else if (!elements.patientName) {
-        elements.patientName = this.findLargeUppercaseTextIn(document.body, ["CHAMANDO", "PACIENTE", "-"]);
-      }
-      if (!elements.localName && elements.callingCard) {
-        const childElements = Array.from(elements.callingCard.querySelectorAll("span, div, h1, h2, h3, p"));
-        for (const el of childElements) {
+      const historySection = document.querySelector(
+        '.history-section, .ultimas-chamadas, aside.history, .painel-historico, [class*="history"], [class*="sidebar"]'
+      );
+      let callingCard = document.querySelector(
+        '.calling-card, .chamando-card, .painel-chamando, [class*="chamando-card"]'
+      );
+      if (!callingCard) {
+        const allDivs = Array.from(document.querySelectorAll("div, section, td, th, h1, h2, h3, p, span"));
+        let chamandoHeader = null;
+        for (const el of allDivs) {
           const text = (el.textContent || "").trim().toUpperCase();
-          if (text.includes("SALA") || text.includes("GUICHE") || text.includes("GUICH\xCA") || text.includes("CONSULTORIO") || text.includes("CONSULT\xD3RIO")) {
-            elements.localName = el;
+          if (text === "CHAMANDO" || text === "CHAMANDO ATIVA" || text === "PACIENTE CHAMADO") {
+            chamandoHeader = el;
             break;
           }
         }
-      }
-      return elements;
-    }
-    /**
-     * Helper que encontra elementos com textos em maiúsculo de grande tamanho
-     */
-    static findLargeUppercaseTextIn(root, excludeWords) {
-      const childElements = Array.from(root.querySelectorAll("span, div, h1, h2, h3, p, td"));
-      let bestMatch = null;
-      let maxFontSize = 0;
-      for (const el of childElements) {
-        const text = (el.textContent || "").trim();
-        if (text.length > 4 && /^[A-Z\s\u00C0-\u00FF]+$/.test(text) && text.includes(" ") && !excludeWords.some((w) => text.includes(w)) && !text.includes("PREFEITURA") && !text.includes("SECRETARIA") && !text.includes("SAUDE") && !text.includes("SA\xDADE") && !text.includes("BETIM")) {
-          const style = window.getComputedStyle(el);
-          const fontSize = parseFloat(style.fontSize);
-          if (fontSize > maxFontSize) {
-            maxFontSize = fontSize;
-            bestMatch = el;
+        if (chamandoHeader) {
+          let parent = chamandoHeader.parentElement;
+          while (parent && parent !== document.body) {
+            const rect = parent.getBoundingClientRect();
+            if (rect.width > 200 && rect.width < window.innerWidth * 0.8) {
+              callingCard = parent;
+              break;
+            }
+            parent = parent.parentElement;
           }
         }
       }
-      return bestMatch;
+      const searchRoot = callingCard || document.body;
+      let patientName = document.querySelector("#current-patient, .called-patient, .chamando-paciente, .paciente-chamado");
+      let localName = document.querySelector("#current-local, .called-local, .chamando-local, .sala-chamada");
+      let professionalName = document.querySelector("#current-professional, .called-professional, .chamando-profissional");
+      if (!patientName) {
+        patientName = this.findValueByLabelHeuristic(searchRoot, ["PACIENTE"], historySection);
+      }
+      if (!localName) {
+        localName = this.findValueByLabelHeuristic(searchRoot, ["LOCAL", "SALA", "GUICH\xCA", "GUICHE"], historySection);
+      }
+      if (!professionalName) {
+        professionalName = this.findValueByLabelHeuristic(searchRoot, ["PROFISSIONAL", "M\xC9DICO", "MEDICO", "ENFERMEIRO"], historySection);
+      }
+      return {
+        callingCard,
+        patientName,
+        localName,
+        professionalName,
+        historySection,
+        footerTicker: document.querySelector(".panel-footer, footer, .footer-ticker, marquee")
+      };
+    }
+    /**
+     * Encontra um elemento de valor que está posicionado após/abaixo de um rótulo explicativo
+     */
+    static findValueByLabelHeuristic(root, labelKeywords, excludeContainer) {
+      const all = Array.from(root.querySelectorAll("span, div, h1, h2, h3, p, td, th, b, strong, label"));
+      for (let i = 0; i < all.length; i++) {
+        const el = all[i];
+        if (excludeContainer && excludeContainer.contains(el)) {
+          continue;
+        }
+        const text = (el.textContent || "").trim().toUpperCase();
+        const matchesLabel = labelKeywords.some(
+          (keyword) => text === keyword || text.startsWith(keyword + ":") || text.startsWith(keyword + " ")
+        );
+        if (matchesLabel) {
+          for (let j = i + 1; j < all.length; j++) {
+            const valEl = all[j];
+            if (excludeContainer && excludeContainer.contains(valEl)) {
+              continue;
+            }
+            const valText = (valEl.textContent || "").trim();
+            if (valText && valText !== "-" && valEl.children.length === 0 && !labelKeywords.some((k) => valText.toUpperCase().includes(k)) && !valText.toUpperCase().includes("PACIENTE") && !valText.toUpperCase().includes("LOCAL") && !valText.toUpperCase().includes("PROFISSIONAL")) {
+              return valEl;
+            }
+          }
+        }
+      }
+      return null;
     }
     /**
      * Obtém as caixas de colisão física dos blocos
@@ -216,13 +233,6 @@
       }
     }
     updateContextData() {
-      const elements = SigssPanelAdapter.getElements();
-      if (elements.patientName) {
-        const text = (elements.patientName.textContent || "").trim();
-        if (text && text !== "-" && text !== this.currentCalledPatient && text.length > 2) {
-          this.currentCalledPatient = text;
-        }
-      }
       const now = /* @__PURE__ */ new Date();
       this.lastAnnouncedHour = now.getHours();
     }
