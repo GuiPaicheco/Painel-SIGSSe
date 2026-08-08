@@ -21,7 +21,7 @@ export interface MascotSkinDefinition {
   id: string;
   name: string;
   type: 'svg' | 'spritesheet' | 'image';
-  src: string; // SVG inline, data URL ou caminho de arquivo
+  src: string; // SVG sanitizado ou URL
   width: number;
   height: number;
 }
@@ -61,8 +61,9 @@ export interface CampaignDefinition {
 }
 
 export interface RemoteContentManifest {
-  version: string;
-  minExtensionVersion: string;
+  contentVersion: string;   // Formato YYYY.MM.DD.NNN (ex: 2026.08.08.001)
+  schemaVersion: string;    // Major.minor do schema JSON (ex: 1.0)
+  minExtensionVersion: string; // Versão mínima da extensão requerida (ex: 2.0.0)
   updatedAt: string;
   signature?: string;
   mascots: MascotDefinition[];

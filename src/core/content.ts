@@ -14,6 +14,7 @@ class SIGSSMascotCore {
   private isRunning = false;
   private observer: MutationObserver | null = null;
   private lastCalledPatient = '';
+  private remoteUpdateUnsubscribe: (() => void) | null = null;
 
   public async init() {
     if (!SigssPanelAdapter.isPanelPage()) {
@@ -25,6 +26,12 @@ class SIGSSMascotCore {
 
     // 1. Inicializar o Provedor de Conteúdo Remoto & Cache Local
     await RemoteContentManager.getInstance().init();
+
+    // Escutar eventos de atualização dinâmica remota (Hot-Reload de Conteúdo)
+    this.remoteUpdateUnsubscribe = RemoteContentManager.getInstance().onUpdate(() => {
+      console.log('Painel SIGSS+ Mascote v2.0: Atualização remota recebida. Aplicando hot-reload visual...');
+      this.refreshVisualSkins();
+    });
 
     // 2. Aguardar o carregamento dos elementos cruciais do DOM
     this.waitForElementsAndStart();
@@ -50,7 +57,6 @@ class SIGSSMascotCore {
   private async start() {
     if (this.isRunning) return;
 
-    // Carregar configurações locais e remotas
     const settings = await MascotConfigManager.load();
     if (!settings.mascotEnabled) {
       console.log('Painel SIGSS+ Mascote v2.0: Extensão desativada nas configurações.');
@@ -63,16 +69,14 @@ class SIGSSMascotCore {
     const count = settings.mascotCount || 1;
     console.log(`Painel SIGSS+ Mascote v2.0: Spawnando ${count} mascote(s)...`);
 
-    // Lista de skins disponíveis a partir do manifesto remoto/cache
     const availableMascots = RemoteContentManager.getInstance().getMascots();
     const skinIds = availableMascots.map(m => m.id);
 
     for (let i = 0; i < count; i++) {
       const engine = new MascotEngine();
       
-      // Espaçar os mascotes horizontalmente na inicialização
       engine.x = (window.innerWidth / (count + 1)) * (i + 1) - (settings.size / 2);
-      engine.y = 80; // Solta do topo
+      engine.y = 80;
       
       engine.updateConfig({
         speedMultiplier: settings.speedMultiplier,
@@ -83,7 +87,6 @@ class SIGSSMascotCore {
 
       const renderer = new MascotRenderer(engine);
 
-      // Determinar o visual do mascote atual
       let activeSkin = settings.mascotSkin || 'gotinha';
       if (activeSkin === 'mixed' && skinIds.length > 0) {
         activeSkin = skinIds[i % skinIds.length];
@@ -97,11 +100,14 @@ class SIGSSMascotCore {
       this.mascots.push({ engine, renderer });
     }
 
-    // Iniciar loop unificado de animação
     this.animationLoop();
-
-    // Configurar observador do painel
     this.setupCallObserver();
+  }
+
+  private refreshVisualSkins() {
+    this.mascots.forEach(m => {
+      m.renderer.updateSkinVisual();
+    });
   }
 
   private stop() {
@@ -115,6 +121,11 @@ class SIGSSMascotCore {
     if (this.observer) {
       this.observer.disconnect();
       this.observer = null;
+    }
+
+    if (this.remoteUpdateUnsubscribe) {
+      this.remoteUpdateUnsubscribe();
+      this.remoteUpdateUnsubscribe = null;
     }
 
     console.log('Painel SIGSS+ Mascote v2.0: Motores parados e limpos.');
@@ -155,7 +166,6 @@ class SIGSSMascotCore {
         const local = (elements.localName?.textContent || '').trim();
         const professional = (elements.professionalName?.textContent || '').trim();
 
-        // Notificar todos os mascotes ativos para reação
         this.mascots.forEach(m => {
           m.engine.triggerCallReaction(currentText, local, professional);
         });

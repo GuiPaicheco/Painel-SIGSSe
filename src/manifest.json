@@ -1,14 +1,15 @@
 {
   "manifest_version": 3,
   "name": "Painel SIGSS+ Mascote",
-  "version": "1.0.0",
-  "description": "Injeta um mascote interativo no painel de chamadas da UBS Betim para distração dos pacientes.",
+  "version": "2.0.0",
+  "description": "Injeta mascotes interativos e campanhas de saúde no painel de chamadas do SIGSS para distração dos pacientes.",
   "author": "Guilherme Paicheco Ferreira",
   "permissions": [
     "storage"
   ],
   "host_permissions": [
-    "http://sigss.betim.mg.gov.br/unique-panel/*"
+    "http://sigss.betim.mg.gov.br/unique-panel/*",
+    "https://raw.githubusercontent.com/*"
   ],
   "action": {
     "default_popup": "popup.html",

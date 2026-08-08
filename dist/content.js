@@ -509,7 +509,8 @@
 
   // src/content/fallbackManifest.ts
   var FALLBACK_MANIFEST = {
-    version: "2.0.0",
+    contentVersion: "2026.08.08.001",
+    schemaVersion: "1.0",
     minExtensionVersion: "2.0.0",
     updatedAt: (/* @__PURE__ */ new Date()).toISOString(),
     mascots: [
@@ -587,7 +588,7 @@
     campaigns: [
       {
         id: "saude_preventiva",
-        title: "Sa\xFAde Preventiva UBS",
+        title: "Sa\xFAde Preventiva UBS Betim",
         priority: 1,
         messages: [
           {
@@ -613,14 +614,60 @@
     ]
   };
 
+  // src/utils/svgSanitizer.ts
+  var SvgSanitizer = class {
+    static DANGEROUS_TAGS = ["script", "iframe", "embed", "object", "foreignobject", "base", "form", "input", "meta", "link"];
+    static sanitize(svgContent) {
+      if (!svgContent || typeof svgContent !== "string") {
+        return "";
+      }
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(svgContent, "image/svg+xml");
+        if (doc.querySelector("parsererror")) {
+          return this.regexFallbackSanitize(svgContent);
+        }
+        const svgNode = doc.querySelector("svg");
+        if (!svgNode) {
+          return "";
+        }
+        this.DANGEROUS_TAGS.forEach((tag) => {
+          const elements = doc.querySelectorAll(tag);
+          elements.forEach((el) => el.parentNode?.removeChild(el));
+        });
+        const allElements = doc.querySelectorAll("*");
+        allElements.forEach((el) => {
+          const attrs = Array.from(el.attributes);
+          attrs.forEach((attr) => {
+            const attrName = attr.name.toLowerCase();
+            const attrValue = attr.value.toLowerCase();
+            if (attrName.startsWith("on")) {
+              el.removeAttribute(attr.name);
+            }
+            if ((attrName === "href" || attrName === "xlink:href" || attrName === "src") && (attrValue.includes("javascript:") || attrValue.includes("data:text/html"))) {
+              el.removeAttribute(attr.name);
+            }
+          });
+        });
+        return svgNode.outerHTML;
+      } catch (e) {
+        return this.regexFallbackSanitize(svgContent);
+      }
+    }
+    static regexFallbackSanitize(raw) {
+      return raw.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, "").replace(/on\w+\s*=\s*(['"]).*?\1/gi, "").replace(/on\w+\s*=\s*[^>\s]+/gi, "").replace(/href\s*=\s*['"]javascript:.*?['"]/gi, "");
+    }
+  };
+
   // src/content/RemoteContentManager.ts
   var RemoteContentManager = class _RemoteContentManager {
     static instance = null;
     currentManifest = FALLBACK_MANIFEST;
     isFetching = false;
-    // URL base para consulta remota no repositório GitHub
+    listeners = /* @__PURE__ */ new Set();
     remoteUrl = "https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/main/content/manifest.json";
     constructor() {
+      this.sanitizeManifestSkins(this.currentManifest);
     }
     static getInstance() {
       if (!_RemoteContentManager.instance) {
@@ -628,20 +675,36 @@
       }
       return _RemoteContentManager.instance;
     }
+    onUpdate(listener) {
+      this.listeners.add(listener);
+      return () => this.listeners.delete(listener);
+    }
+    notifyUpdate() {
+      this.listeners.forEach((fn) => {
+        try {
+          fn(this.currentManifest);
+        } catch (e) {
+          console.error("SIGSSe ContentManager: Erro ao notificar ouvinte de atualiza\xE7\xE3o:", e);
+        }
+      });
+    }
     /**
-     * Inicializa o gerenciador de conteúdo com carregamento instantâneo via cache local / fallback
-     * e dispara verificação remota em background.
+     * Inicializa o gerenciador com Stale-While-Revalidate:
+     * 1. Carrega do cache local/fallback imediatamente.
+     * 2. Tenta atualização remota em background.
      */
     async init() {
       const cached = await this.loadFromLocalCache();
-      if (cached) {
+      if (cached && this.validateManifestSchema(cached)) {
+        this.sanitizeManifestSkins(cached);
         this.currentManifest = cached;
       } else {
+        this.sanitizeManifestSkins(FALLBACK_MANIFEST);
         this.currentManifest = FALLBACK_MANIFEST;
         await this.saveToLocalCache(FALLBACK_MANIFEST);
       }
       this.checkRemoteUpdateInBackground().catch((err) => {
-        console.warn("SIGSSe ContentManager: Falha ao verificar atualiza\xE7\xF5es remotas:", err);
+        console.warn("SIGSSe ContentManager: Falha na verifica\xE7\xE3o de atualiza\xE7\xE3o remota:", err);
       });
       return this.currentManifest;
     }
@@ -652,7 +715,7 @@
       return this.currentManifest.mascots || FALLBACK_MANIFEST.mascots;
     }
     getMascotById(id) {
-      return this.getMascots().find((m) => m.id === id) || FALLBACK_MANIFEST.mascots.find((m) => m.id === id);
+      return this.getMascots().find((m) => m && m.id === id) || FALLBACK_MANIFEST.mascots.find((m) => m.id === id);
     }
     getCampaigns() {
       return this.currentManifest.campaigns || FALLBACK_MANIFEST.campaigns;
@@ -662,7 +725,7 @@
       if (!campaigns || campaigns.length === 0) return null;
       const allMessages = [];
       campaigns.forEach((c) => {
-        if (c.messages && c.messages.length > 0) {
+        if (c && Array.isArray(c.messages) && c.messages.length > 0) {
           allMessages.push(...c.messages);
         }
       });
@@ -671,8 +734,42 @@
       return allMessages[randomIndex];
     }
     /**
-     * Carrega o manifesto salvo em chrome.storage.local
+     * Validação rígida do Schema de Conteúdo Remoto
      */
+    validateManifestSchema(data) {
+      if (!data || typeof data !== "object") return false;
+      if (!data.contentVersion || typeof data.contentVersion !== "string") return false;
+      if (!data.schemaVersion || typeof data.schemaVersion !== "string") return false;
+      if (!Array.isArray(data.mascots) || data.mascots.length === 0) return false;
+      for (const mascot of data.mascots) {
+        if (!mascot || typeof mascot !== "object" || !mascot.id || typeof mascot.id !== "string") {
+          return false;
+        }
+        if (!mascot.skins || typeof mascot.skins !== "object") {
+          return false;
+        }
+        if (!mascot.skins.default || typeof mascot.skins.default !== "object" || !mascot.skins.default.src) {
+          return false;
+        }
+      }
+      return true;
+    }
+    /**
+     * Sanitiza todas as strings SVG contidas nos mascotes
+     */
+    sanitizeManifestSkins(manifest) {
+      if (!manifest || !manifest.mascots) return;
+      manifest.mascots.forEach((mascot) => {
+        if (mascot && mascot.skins) {
+          Object.keys(mascot.skins).forEach((skinKey) => {
+            const skin = mascot.skins[skinKey];
+            if (skin && skin.type === "svg" && skin.src) {
+              skin.src = SvgSanitizer.sanitize(skin.src);
+            }
+          });
+        }
+      });
+    }
     async loadFromLocalCache() {
       return new Promise((resolve) => {
         if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
@@ -688,9 +785,6 @@
         }
       });
     }
-    /**
-     * Salva o manifesto no cache local
-     */
     async saveToLocalCache(manifest) {
       return new Promise((resolve) => {
         if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
@@ -702,11 +796,8 @@
         }
       });
     }
-    /**
-     * Busca a versão remota no GitHub CDN e aplica atualização se a versão for mais recente.
-     */
     async checkRemoteUpdateInBackground() {
-      if (this.isFetching) return;
+      if (this.isFetching) return false;
       this.isFetching = true;
       try {
         const response = await fetch(this.remoteUrl, { cache: "no-cache" });
@@ -714,17 +805,24 @@
           throw new Error(`HTTP Error ${response.status}`);
         }
         const remoteData = await response.json();
-        if (remoteData && remoteData.version && Array.isArray(remoteData.mascots)) {
-          if (remoteData.version !== this.currentManifest.version) {
-            console.log(`SIGSSe ContentManager: Nova vers\xE3o remota encontrada (${remoteData.version}). Atualizando cache...`);
+        if (this.validateManifestSchema(remoteData)) {
+          if (remoteData.contentVersion !== this.currentManifest.contentVersion) {
+            console.log(`SIGSSe ContentManager: Nova vers\xE3o de conte\xFAdo remota recebida (${remoteData.contentVersion}). Atualizando cache e notificando...`);
+            this.sanitizeManifestSkins(remoteData);
             this.currentManifest = remoteData;
             await this.saveToLocalCache(remoteData);
+            this.notifyUpdate();
+            return true;
           }
+        } else {
+          console.warn("SIGSSe ContentManager: Conte\xFAdo remoto recebido possui schema inv\xE1lido. Mantendo fallback/cache anterior.");
         }
       } catch (e) {
+        console.warn("SIGSSe ContentManager: Conex\xE3o remota indispon\xEDvel ou falhou. Mantendo estado offline seguro.");
       } finally {
         this.isFetching = false;
       }
+      return false;
     }
   };
 
@@ -825,6 +923,11 @@
     container;
     mascotEl;
     skinId = "gotinha";
+    // Handlers salvos para remoção limpa no destroy (Memory Leak Prevention)
+    mouseMoveHandler = null;
+    mouseUpHandler = null;
+    clickHandler = null;
+    mouseDownHandler = null;
     constructor(engine) {
       this.engine = engine;
       this.container = document.createElement("div");
@@ -890,30 +993,50 @@
       let isDragging = false;
       let startX = 0;
       let startY = 0;
-      this.container.addEventListener("mousedown", (e) => {
+      this.mouseDownHandler = (e) => {
         isDragging = true;
         startX = e.clientX - this.engine.x;
         startY = e.clientY - this.engine.y;
         this.container.style.cursor = "grabbing";
         this.engine.setState("DRAGGED");
-      });
-      window.addEventListener("mousemove", (e) => {
+      };
+      this.mouseMoveHandler = (e) => {
         if (!isDragging) return;
         this.engine.x = e.clientX - startX;
         this.engine.y = e.clientY - startY;
-      });
-      window.addEventListener("mouseup", () => {
+      };
+      this.mouseUpHandler = () => {
         if (isDragging) {
           isDragging = false;
           this.container.style.cursor = "grab";
           this.engine.setState("FALL");
         }
-      });
-      this.container.addEventListener("click", () => {
+      };
+      this.clickHandler = () => {
         this.triggerCampaignSpeech();
-      });
+      };
+      this.container.addEventListener("mousedown", this.mouseDownHandler);
+      this.container.addEventListener("click", this.clickHandler);
+      window.addEventListener("mousemove", this.mouseMoveHandler);
+      window.addEventListener("mouseup", this.mouseUpHandler);
     }
     destroy() {
+      if (this.mouseMoveHandler) {
+        window.removeEventListener("mousemove", this.mouseMoveHandler);
+        this.mouseMoveHandler = null;
+      }
+      if (this.mouseUpHandler) {
+        window.removeEventListener("mouseup", this.mouseUpHandler);
+        this.mouseUpHandler = null;
+      }
+      if (this.mouseDownHandler) {
+        this.container.removeEventListener("mousedown", this.mouseDownHandler);
+        this.mouseDownHandler = null;
+      }
+      if (this.clickHandler) {
+        this.container.removeEventListener("click", this.clickHandler);
+        this.clickHandler = null;
+      }
       if (this.container && this.container.parentNode) {
         this.container.parentNode.removeChild(this.container);
       }
@@ -985,6 +1108,7 @@
     isRunning = false;
     observer = null;
     lastCalledPatient = "";
+    remoteUpdateUnsubscribe = null;
     async init() {
       if (!SigssPanelAdapter.isPanelPage()) {
         console.log("Painel SIGSS+ Mascote v2.0: P\xE1gina atual n\xE3o identificada como painel de chamadas.");
@@ -992,6 +1116,10 @@
       }
       console.log("Painel SIGSS+ Mascote v2.0: Inicializando plataforma modular...");
       await RemoteContentManager.getInstance().init();
+      this.remoteUpdateUnsubscribe = RemoteContentManager.getInstance().onUpdate(() => {
+        console.log("Painel SIGSS+ Mascote v2.0: Atualiza\xE7\xE3o remota recebida. Aplicando hot-reload visual...");
+        this.refreshVisualSkins();
+      });
       this.waitForElementsAndStart();
       this.setupConfigListener();
     }
@@ -1044,6 +1172,11 @@
       this.animationLoop();
       this.setupCallObserver();
     }
+    refreshVisualSkins() {
+      this.mascots.forEach((m) => {
+        m.renderer.updateSkinVisual();
+      });
+    }
     stop() {
       this.isRunning = false;
       this.mascots.forEach((m) => {
@@ -1053,6 +1186,10 @@
       if (this.observer) {
         this.observer.disconnect();
         this.observer = null;
+      }
+      if (this.remoteUpdateUnsubscribe) {
+        this.remoteUpdateUnsubscribe();
+        this.remoteUpdateUnsubscribe = null;
       }
       console.log("Painel SIGSS+ Mascote v2.0: Motores parados e limpos.");
     }

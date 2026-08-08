@@ -1,7 +1,8 @@
 import { RemoteContentManifest } from '../types';
 
 export const FALLBACK_MANIFEST: RemoteContentManifest = {
-  version: '2.0.0',
+  contentVersion: '2026.08.08.001',
+  schemaVersion: '1.0',
   minExtensionVersion: '2.0.0',
   updatedAt: new Date().toISOString(),
   mascots: [
@@ -79,7 +80,7 @@ export const FALLBACK_MANIFEST: RemoteContentManifest = {
   campaigns: [
     {
       id: 'saude_preventiva',
-      title: 'Saúde Preventiva UBS',
+      title: 'Saúde Preventiva UBS Betim',
       priority: 1,
       messages: [
         {
