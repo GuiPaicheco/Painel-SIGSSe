@@ -10,7 +10,12 @@ export class RemoteContentManager {
   private isFetching = false;
   private listeners: Set<ContentUpdateListener> = new Set();
 
-  private remoteUrl = 'https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/main/content/manifest.json';
+  // URL Padrão de QA / Desenvolvimento (Branch de Feature)
+  public static readonly QA_REMOTE_URL = 'https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/feature/architecture-v2/content/manifest.json';
+  // URL Padrão de Produção (Branch Main)
+  public static readonly PROD_REMOTE_URL = 'https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/main/content/manifest.json';
+
+  private remoteUrl = RemoteContentManager.QA_REMOTE_URL;
 
   private constructor() {
     this.sanitizeManifestSkins(this.currentManifest);
@@ -25,6 +30,10 @@ export class RemoteContentManager {
 
   public setRemoteUrl(url: string): void {
     this.remoteUrl = url;
+  }
+
+  public getRemoteUrl(): string {
+    return this.remoteUrl;
   }
 
   public onUpdate(listener: ContentUpdateListener): () => void {
@@ -45,7 +54,7 @@ export class RemoteContentManager {
   /**
    * Inicializa o gerenciador com Stale-While-Revalidate:
    * 1. Carrega do cache local/fallback imediatamente.
-   * 2. Tenta atualização remota em background.
+   * 2. Tenta atualização remota real em background via fetch HTTP.
    */
   public async init(): Promise<RemoteContentManifest> {
     const cached = await this.loadFromLocalCache();
@@ -122,7 +131,7 @@ export class RemoteContentManager {
   }
 
   /**
-   * Simulação e aplicação de atualização remota para testes determinísticos E2E
+   * Simulação local exclusivamente para testes de desenvolvimento offline
    */
   public async simulateRemoteUpdate(remoteData: any): Promise<boolean> {
     if (!this.validateManifestSchema(remoteData)) {
@@ -143,9 +152,6 @@ export class RemoteContentManager {
     return true;
   }
 
-  /**
-   * Sanitiza todas as strings SVG contidas nos mascotes
-   */
   private sanitizeManifestSkins(manifest: RemoteContentManifest): void {
     if (!manifest || !manifest.mascots) return;
     manifest.mascots.forEach(mascot => {
@@ -188,11 +194,15 @@ export class RemoteContentManager {
     });
   }
 
+  /**
+   * Caminho Principal de Produção/QA: Realiza o Fetch HTTP Real no GitHub Raw
+   */
   public async checkRemoteUpdateInBackground(): Promise<boolean> {
     if (this.isFetching) return false;
     this.isFetching = true;
 
     try {
+      console.log(`SIGSSe ContentManager: Verificando manifesto remoto real em: ${this.remoteUrl}`);
       const response = await fetch(this.remoteUrl, { cache: 'no-cache' });
       if (!response.ok) {
         throw new Error(`HTTP Error ${response.status}`);
@@ -202,12 +212,14 @@ export class RemoteContentManager {
       
       if (this.validateManifestSchema(remoteData)) {
         if (remoteData.contentVersion !== this.currentManifest.contentVersion) {
-          console.log(`SIGSSe ContentManager: Nova versão de conteúdo remota recebida (${remoteData.contentVersion}). Atualizando cache e notificando...`);
+          console.log(`SIGSSe ContentManager: Nova versão de conteúdo remota recebida do GitHub (${remoteData.contentVersion}). Atualizando cache e notificando...`);
           this.sanitizeManifestSkins(remoteData);
           this.currentManifest = remoteData;
           await this.saveToLocalCache(remoteData);
           this.notifyUpdate();
           return true;
+        } else {
+          console.log(`SIGSSe ContentManager: Conteúdo remoto em dia (${remoteData.contentVersion}). Nenhum update necessário.`);
         }
       } else {
         console.warn('SIGSSe ContentManager: Conteúdo remoto recebido possui schema inválido. Mantendo fallback/cache anterior.');

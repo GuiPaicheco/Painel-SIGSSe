@@ -1,21 +1,21 @@
 {
-  "contentVersion": "2026.08.08.001",
+  "contentVersion": "2026.08.08.002",
   "schemaVersion": "1.0",
   "minExtensionVersion": "2.0.0",
-  "updatedAt": "2026-08-08T19:30:00Z",
-  "signature": "sha256-content-manifest-v2",
+  "updatedAt": "2026-08-08T20:16:00Z",
+  "signature": "sha256-content-manifest-v2-gold",
   "mascots": [
     {
       "id": "gotinha",
-      "name": "Zé Gotinha",
+      "name": "Zé Gotinha Dourado (Versão Remota 002)",
       "version": "2.0.0",
       "defaultSkin": "default",
       "skins": {
         "default": {
           "id": "default",
-          "name": "Zé Gotinha Clássico",
+          "name": "Zé Gotinha Dourado",
           "type": "svg",
-          "src": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M32 4 C32 4 12 28 12 42 A20 20 0 0 0 52 42 C52 28 32 4 32 4 Z\" fill=\"#FFFFFF\" stroke=\"#0288D1\" stroke-width=\"3\"/><circle cx=\"25\" cy=\"38\" r=\"3\" fill=\"#0288D1\"/><circle cx=\"39\" cy=\"38\" r=\"3\" fill=\"#0288D1\"/><path d=\"M26 46 Q32 52 38 46\" fill=\"none\" stroke=\"#E53935\" stroke-width=\"2.5\" stroke-linecap=\"round\"/><path d=\"M22 28 C26 24 38 24 42 28\" fill=\"none\" stroke=\"#0288D1\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>",
+          "src": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M32 4 C32 4 12 28 12 42 A20 20 0 0 0 52 42 C52 28 32 4 32 4 Z\" fill=\"#FFD700\" stroke=\"#FF8F00\" stroke-width=\"3\"/><circle cx=\"25\" cy=\"38\" r=\"3\" fill=\"#37474F\"/><circle cx=\"39\" cy=\"38\" r=\"3\" fill=\"#37474F\"/><path d=\"M26 46 Q32 52 38 46\" fill=\"none\" stroke=\"#D84315\" stroke-width=\"2.5\" stroke-linecap=\"round\"/><path d=\"M22 28 C26 24 38 24 42 28\" fill=\"none\" stroke=\"#FF8F00\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>",
           "width": 64,
           "height": 64
         }
@@ -56,27 +56,15 @@
   ],
   "campaigns": [
     {
-      "id": "saude_preventiva",
-      "title": "Saúde Preventiva UBS Betim",
-      "priority": 1,
+      "id": "saude_preventiva_v2",
+      "title": "Saúde Preventiva UBS Betim (Versão Remota 002)",
+      "priority": 10,
       "messages": [
         {
-          "id": "msg_01",
-          "text": "Mantenha sua caderneta de vacinação sempre atualizada!",
+          "id": "msg_v2_real",
+          "text": "🎉 Conteúdo remoto v2026.08.08.002 baixado diretamente do GitHub Raw!",
           "category": "vaccination",
-          "displayDurationSeconds": 7
-        },
-        {
-          "id": "msg_02",
-          "text": "Beba bastante água diariamente para cuidar da sua saúde.",
-          "category": "health_tip",
-          "displayDurationSeconds": 6
-        },
-        {
-          "id": "msg_03",
-          "text": "Consulte seu médico da UBS regularmente para exames preventivos.",
-          "category": "prevention",
-          "displayDurationSeconds": 8
+          "displayDurationSeconds": 10
         }
       ]
     }
