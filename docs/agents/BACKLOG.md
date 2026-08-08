@@ -19,9 +19,10 @@
 | **TASK-108** | Atualização das permissões do Manifest V3 (`host_permissions` e versão) | Alta | TASK-103 | 🔒 Security | Inclusão de `https://raw.githubusercontent.com/*` e versão `"2.0.0"` em `src/manifest.json`. | Check de manifest | 🟢 **Concluído** |
 | **TASK-109** | Validação no Painel Simulado Local (`mock/mock_panel.html`) | Alta | TASK-105, 107 | 👁️ Visual QA | Funcionamento sem erros no console no mock com mutação de chamadas. | Teste visual Chromium | 🟢 **Concluído** |
 | **TASK-110** | Integração e Validação Read-Only no Painel SIGSS Real da UBS | Alta | TASK-109 | 🏥 SIGSS Integration / 👁️ Visual QA | Leitura passiva do DOM do painel real sem alteração ou mutação de dados. | Teste no SIGSS real | 🟢 **Concluído** |
-| **TASK-201** | Suporte a Spritesheets PNG e Animações Frame-by-Frame para Skins Complexas | Média | TASK-103 | 🌐 Remote Content / 💻 Developer | Suporte no `MascotRenderer` a atlas de frames PNG além do formato SVG. | Testes de animação PNG | 🟡 **Aguardando Início** |
-| **TASK-202** | Painel Administrativo de Visualização de Campanhas e Agendamento por Data | Média | TASK-106 | 🎨 Frontend/UI / ✍️ Content | Filtro de mensagens ativas por período (`startDate` / `endDate`) e categoria de saúde. | Testes de data/hora | 🟡 **Aguardando Início** |
-| **TASK-203** | Implementação da Suíte E2E Automatizada com Playwright Headless | Alta | TASK-109 | 🧪 QA / 👁️ Visual QA | Script automatizado de regressão visual integrado ao fluxo de build. | `npm run test:e2e` | 🟡 **Aguardando Início** |
+| **TASK-205** | Plataforma de Autoria e Distribuição Declarativa de Conteúdo (`Content Authoring System`) | Alta | TASK-103 | 🏛️ Architect / ✍️ Content / 🌐 Remote Content | Estrutura modular `content/` (mascots, messages, campaigns), script `compile-content.js`, schemas e filtragem por data (`startDate`/`endDate`). | Vitest 18/18 & E2E Visual | 🟢 **Concluído** |
+| **TASK-201** | Suporte a Spritesheets PNG e Animações Frame-by-Frame para Skins Complexas | Média | TASK-205 | 🌐 Remote Content / 💻 Developer | Suporte no `MascotRenderer` a atlas de frames PNG além do formato SVG. | Testes de animação PNG | 🟡 **Aguardando Início** |
+| **TASK-202** | Painel Administrativo de Visualização de Campanhas e Agendamento por Data | Média | TASK-205 | 🎨 Frontend/UI / ✍️ Content | Filtro de mensagens ativas por período (`startDate` / `endDate`) e categoria de saúde. | Testes de data/hora | 🟡 **Aguardando Início** |
+| **TASK-203** | Implementação da Suíte E2E Automatizada com Playwright Headless | Alta | TASK-205 | 🧪 QA / 👁️ Visual QA | Script automatizado de regressão visual integrado ao fluxo de build. | `npm run test:e2e` | 🟡 **Aguardando Início** |
 | **TASK-204** | Preparação do Pacote de Release v2.0.0 (Tag Semântica + Changelog) | Restrita | TASK-203 | 🚀 Git/Release | Tag Git `v2.0.0` e arquivo `CHANGELOG.md` prontos para revisão do usuário. | Audit de release | 🔴 **Exige Aprovação Humana** |
 
 ---
@@ -30,7 +31,7 @@
 
 ```mermaid
 graph TD
-    subgraph Missão 1 Concluída - Pipeline Remoto Validado E2E
+    subgraph Fase 1 & 2 Concluídas - Pipeline Remoto & Content Authoring System
         T101[TASK-101: Docs & Audit] --> T102[TASK-102: TypeScript Types]
         T102 --> T103[TASK-103: Remote Content Live Reload]
         T102 --> T105[TASK-105: Mascot Memory Leak Fix]
@@ -40,12 +41,13 @@ graph TD
         T104 --> T108[TASK-108: Manifest V3 Permissions]
         T105 & T107 --> T109[TASK-109: Mock Visual QA]
         T108 & T109 --> T110[TASK-110: SIGSS Real Read-Only QA]
+        T110 --> T205[TASK-205: Content Authoring System]
     end
 
     subgraph Próxima Fase (Desenvolvimento Paralelo)
-        T110 --> T201[TASK-201: PNG Spritesheet Support]
-        T110 --> T202[TASK-202: Campaign Date Scheduler]
-        T110 --> T203[TASK-203: Playwright E2E Suite]
+        T205 --> T201[TASK-201: PNG Spritesheet Support]
+        T205 --> T202[TASK-202: Campaign Date Scheduler]
+        T205 --> T203[TASK-203: Playwright E2E Suite]
         
         T201 & T202 & T203 --> T204[TASK-204: Release v2.0.0 Package]
     end

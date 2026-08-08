@@ -1,0 +1,26 @@
+{
+  "id": "campanha_vacinacao_2026",
+  "title": "Campanha Permanente de Imunização Betim 2026",
+  "startDate": "2026-01-01T00:00:00Z",
+  "endDate": "2026-12-31T23:59:59Z",
+  "priority": 10,
+  "active": true,
+  "messages": [
+    {
+      "id": "msg_vacinacao_permanente",
+      "text": "💉 Vacinação é vida! Mantenha a caderneta da sua família em dia na UBS Petrovale.",
+      "category": "vaccination",
+      "displayDurationSeconds": 10,
+      "priority": 10,
+      "active": true
+    },
+    {
+      "id": "msg_prevencao_dengue_ativa",
+      "text": "🛡️ Proteja Betim contra a Dengue: Vistorie sua casa semanalmente!",
+      "category": "prevention",
+      "displayDurationSeconds": 10,
+      "priority": 8,
+      "active": true
+    }
+  ]
+}

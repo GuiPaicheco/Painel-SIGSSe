@@ -10,9 +10,7 @@ export class RemoteContentManager {
   private isFetching = false;
   private listeners: Set<ContentUpdateListener> = new Set();
 
-  // URL Padrão de QA / Desenvolvimento (Branch de Feature / Commit SHA 7ce18f0)
   public static readonly QA_REMOTE_URL = 'https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/7ce18f0303f6ed609be138b362a7f5be450b2384/content/manifest.json';
-  // URL Padrão de Produção (Branch Main)
   public static readonly PROD_REMOTE_URL = 'https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/main/content/manifest.json';
 
   private remoteUrl = RemoteContentManager.QA_REMOTE_URL;
@@ -51,11 +49,6 @@ export class RemoteContentManager {
     });
   }
 
-  /**
-   * Inicializa o gerenciador com Stale-While-Revalidate:
-   * 1. Carrega do cache local/fallback imediatamente.
-   * 2. Tenta atualização remota real em background via fetch HTTP no GitHub Raw.
-   */
   public async init(): Promise<RemoteContentManifest> {
     const cached = await this.loadFromLocalCache();
     if (cached && this.validateManifestSchema(cached)) {
@@ -90,25 +83,70 @@ export class RemoteContentManager {
     return this.currentManifest.campaigns || FALLBACK_MANIFEST.campaigns;
   }
 
-  public getRandomCampaignMessage(): CampaignMessage | null {
+  /**
+   * Obtém campanhas ativas e vigentes considerando o horário atual (ou data informada)
+   */
+  public getActiveCampaigns(referenceDate: Date = new Date()): CampaignDefinition[] {
     const campaigns = this.getCampaigns();
-    if (!campaigns || campaigns.length === 0) return null;
+    if (!campaigns || campaigns.length === 0) return [];
 
-    const allMessages: CampaignMessage[] = [];
-    campaigns.forEach(c => {
-      if (c && Array.isArray(c.messages) && c.messages.length > 0) {
-        allMessages.push(...c.messages);
+    return campaigns.filter(c => {
+      if (!c) return false;
+      if (c.active === false) return false;
+      
+      if (c.startDate) {
+        const start = new Date(c.startDate);
+        if (!isNaN(start.getTime()) && referenceDate < start) return false;
       }
+      
+      if (c.endDate) {
+        const end = new Date(c.endDate);
+        if (!isNaN(end.getTime()) && referenceDate > end) return false;
+      }
+      
+      return true;
     });
-
-    if (allMessages.length === 0) return null;
-    const randomIndex = Math.floor(Math.random() * allMessages.length);
-    return allMessages[randomIndex];
   }
 
   /**
-   * Validação rígida do Schema de Conteúdo Remoto
+   * Obtém todas as mensagens de campanhas vigentes, filtradas por data e prioridade
    */
+  public getActiveCampaignMessages(referenceDate: Date = new Date()): CampaignMessage[] {
+    const activeCampaigns = this.getActiveCampaigns(referenceDate);
+    const validMessages: CampaignMessage[] = [];
+
+    activeCampaigns.forEach(c => {
+      if (!c.messages || !Array.isArray(c.messages)) return;
+
+      c.messages.forEach(m => {
+        if (!m) return;
+        if (m.active === false) return;
+
+        if (m.startDate) {
+          const start = new Date(m.startDate);
+          if (!isNaN(start.getTime()) && referenceDate < start) return;
+        }
+
+        if (m.endDate) {
+          const end = new Date(m.endDate);
+          if (!isNaN(end.getTime()) && referenceDate > end) return;
+        }
+
+        validMessages.push(m);
+      });
+    });
+
+    return validMessages;
+  }
+
+  public getRandomCampaignMessage(referenceDate: Date = new Date()): CampaignMessage | null {
+    const messages = this.getActiveCampaignMessages(referenceDate);
+    if (!messages || messages.length === 0) return null;
+
+    const randomIndex = Math.floor(Math.random() * messages.length);
+    return messages[randomIndex];
+  }
+
   public validateManifestSchema(data: any): boolean {
     if (!data || typeof data !== 'object') return false;
     if (!data.contentVersion || typeof data.contentVersion !== 'string') return false;
@@ -130,9 +168,6 @@ export class RemoteContentManager {
     return true;
   }
 
-  /**
-   * Simulação local exclusivamente para testes de desenvolvimento offline
-   */
   public async simulateRemoteUpdate(remoteData: any): Promise<boolean> {
     if (!this.validateManifestSchema(remoteData)) {
       console.warn('SIGSSe ContentManager: Simulação de atualização rejeitada por schema inválido.');
@@ -194,9 +229,6 @@ export class RemoteContentManager {
     });
   }
 
-  /**
-   * Caminho Principal de Produção/QA: Realiza o Fetch HTTP Real no GitHub Raw
-   */
   public async checkRemoteUpdateInBackground(): Promise<boolean> {
     if (this.isFetching) return false;
     this.isFetching = true;

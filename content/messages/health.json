@@ -1,0 +1,26 @@
+[
+  {
+    "id": "msg_vacina_gripe",
+    "text": "Campanha de Vacinação: Atualize seu cartão de vacinas contra Gripe e Covid-19!",
+    "category": "vaccination",
+    "displayDurationSeconds": 10
+  },
+  {
+    "id": "msg_dengue_prevencao",
+    "text": "Combate à Dengue: Elimine focos de água parada no seu quintal.",
+    "category": "prevention",
+    "displayDurationSeconds": 10
+  },
+  {
+    "id": "msg_alimentacao_saudavel",
+    "text": "Dica de Saúde: Beba bastante água e mantenha uma alimentação equilibrada.",
+    "category": "health_tip",
+    "displayDurationSeconds": 8
+  },
+  {
+    "id": "msg_e2e_declarativa_sucesso",
+    "text": "💎 Validação E2E: Conteúdo 100% declarativo adicionado sem alterar código TypeScript!",
+    "category": "health_tip",
+    "displayDurationSeconds": 10
+  }
+]

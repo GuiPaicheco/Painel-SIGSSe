@@ -1,0 +1,14 @@
+[
+  {
+    "id": "msg_atendimento_organizado",
+    "text": "Mantenha a atenção no painel de chamadas da recepção.",
+    "category": "general",
+    "displayDurationSeconds": 8
+  },
+  {
+    "id": "msg_documentos_necessarios",
+    "text": "Esteja com seu documento com foto e cartão do SUS em mãos ao ser chamado.",
+    "category": "general",
+    "displayDurationSeconds": 8
+  }
+]

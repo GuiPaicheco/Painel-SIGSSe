@@ -49,11 +49,11 @@ export class MascotRenderer {
     const mascotDef = remoteManager.getMascotById(this.skinId);
 
     let svgContent = '';
-    if (mascotDef && mascotDef.skins && mascotDef.skins.default) {
+    if (mascotDef && mascotDef.skins && mascotDef.skins.default && mascotDef.skins.default.src) {
       svgContent = mascotDef.skins.default.src;
     } else {
       const defaultMascot = remoteManager.getMascotById('gotinha');
-      svgContent = defaultMascot?.skins.default.src || `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="#0288D1"/></svg>`;
+      svgContent = defaultMascot?.skins?.default?.src || `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="#0288D1"/></svg>`;
     }
 
     this.mascotEl.innerHTML = svgContent;

@@ -1,26 +1,9 @@
 {
-  "contentVersion": "2026.08.08.002",
+  "contentVersion": "2026.08.08.005",
   "schemaVersion": "1.0",
   "minExtensionVersion": "2.0.0",
-  "updatedAt": "2026-08-08T20:16:00Z",
-  "signature": "sha256-content-manifest-v2-gold",
+  "updatedAt": "2026-08-08T23:33:28.544Z",
   "mascots": [
-    {
-      "id": "gotinha",
-      "name": "Zé Gotinha Dourado (Versão Remota 002)",
-      "version": "2.0.0",
-      "defaultSkin": "default",
-      "skins": {
-        "default": {
-          "id": "default",
-          "name": "Zé Gotinha Dourado",
-          "type": "svg",
-          "src": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M32 4 C32 4 12 28 12 42 A20 20 0 0 0 52 42 C52 28 32 4 32 4 Z\" fill=\"#FFD700\" stroke=\"#FF8F00\" stroke-width=\"3\"/><circle cx=\"25\" cy=\"38\" r=\"3\" fill=\"#37474F\"/><circle cx=\"39\" cy=\"38\" r=\"3\" fill=\"#37474F\"/><path d=\"M26 46 Q32 52 38 46\" fill=\"none\" stroke=\"#D84315\" stroke-width=\"2.5\" stroke-linecap=\"round\"/><path d=\"M22 28 C26 24 38 24 42 28\" fill=\"none\" stroke=\"#FF8F00\" stroke-width=\"2\" stroke-linecap=\"round\"/></svg>",
-          "width": 64,
-          "height": 64
-        }
-      }
-    },
     {
       "id": "gatinho_laranja",
       "name": "Gatinho Laranja",
@@ -31,9 +14,10 @@
           "id": "default",
           "name": "Gatinho Laranja",
           "type": "svg",
-          "src": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\"><path d=\"M16 22 L24 8 L32 20 L40 8 L48 22 Z\" fill=\"#FB8C00\"/><circle cx=\"32\" cy=\"36\" r=\"20\" fill=\"#FB8C00\"/><circle cx=\"24\" cy=\"32\" r=\"3.5\" fill=\"#212121\"/><circle cx=\"40\" cy=\"32\" r=\"3.5\" fill=\"#212121\"/><polygon points=\"32,38 29,42 35,42\" fill=\"#E91E63\"/><path d=\"M12 36 L22 36 M12 40 L22 39 M52 36 L42 36 M52 40 L42 39\" stroke=\"#424242\" stroke-width=\"2\"/></svg>",
+          "asset": "skins/default.svg",
           "width": 64,
-          "height": 64
+          "height": 64,
+          "src": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\">\n  <path d=\"M16 22 L24 8 L32 20 L40 8 L48 22 Z\" fill=\"#FB8C00\"/>\n  <circle cx=\"32\" cy=\"36\" r=\"20\" fill=\"#FB8C00\"/>\n  <circle cx=\"24\" cy=\"32\" r=\"3.5\" fill=\"#212121\"/>\n  <circle cx=\"40\" cy=\"32\" r=\"3.5\" fill=\"#212121\"/>\n  <polygon points=\"32,38 29,42 35,42\" fill=\"#E91E63\"/>\n  <path d=\"M12 36 L22 36 M12 40 L22 39 M52 36 L42 36 M52 40 L42 39\" stroke=\"#424242\" stroke-width=\"2\"/>\n</svg>\n"
         }
       }
     },
@@ -47,23 +31,134 @@
           "id": "default",
           "name": "Robozinho Azul",
           "type": "svg",
-          "src": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\"><rect x=\"16\" y=\"16\" width=\"32\" height=\"28\" rx=\"6\" fill=\"#0288D1\" stroke=\"#01579B\" stroke-width=\"2\"/><rect x=\"22\" y=\"22\" width=\"20\" height=\"12\" rx=\"3\" fill=\"#E0F7FA\"/><circle cx=\"27\" cy=\"28\" r=\"2.5\" fill=\"#00C853\"/><circle cx=\"37\" cy=\"28\" r=\"2.5\" fill=\"#00C853\"/><line x1=\"32\" y1=\"6\" x2=\"32\" y2=\"16\" stroke=\"#01579B\" stroke-width=\"3\"/><circle cx=\"32\" cy=\"6\" r=\"4\" fill=\"#FFD600\"/><rect x=\"20\" y=\"48\" width=\"8\" height=\"10\" fill=\"#0288D1\"/><rect x=\"36\" y=\"48\" width=\"8\" height=\"10\" fill=\"#0288D1\"/></svg>",
+          "asset": "skins/default.svg",
           "width": 64,
-          "height": 64
+          "height": 64,
+          "src": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\">\n  <rect x=\"16\" y=\"16\" width=\"32\" height=\"28\" rx=\"6\" fill=\"#0288D1\" stroke=\"#01579B\" stroke-width=\"2\"/>\n  <rect x=\"22\" y=\"22\" width=\"20\" height=\"12\" rx=\"3\" fill=\"#E0F7FA\"/>\n  <circle cx=\"27\" cy=\"28\" r=\"2.5\" fill=\"#00C853\"/>\n  <circle cx=\"37\" cy=\"28\" r=\"2.5\" fill=\"#00C853\"/>\n  <line x1=\"32\" y1=\"6\" x2=\"32\" y2=\"16\" stroke=\"#01579B\" stroke-width=\"3\"/>\n  <circle cx=\"32\" cy=\"6\" r=\"4\" fill=\"#FFD600\"/>\n  <rect x=\"20\" y=\"48\" width=\"8\" height=\"10\" fill=\"#0288D1\"/>\n  <rect x=\"36\" y=\"48\" width=\"8\" height=\"10\" fill=\"#0288D1\"/>\n</svg>\n"
+        }
+      }
+    },
+    {
+      "id": "gotinha",
+      "name": "Zé Gotinha Saúde",
+      "version": "2.0.0",
+      "defaultSkin": "emerald",
+      "skins": {
+        "default": {
+          "id": "default",
+          "name": "Zé Gotinha Clássico",
+          "type": "svg",
+          "asset": "skins/default.svg",
+          "width": 64,
+          "height": 64,
+          "src": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\">\n  <path d=\"M32 4 C32 4 12 28 12 42 A20 20 0 0 0 52 42 C52 28 32 4 32 4 Z\" fill=\"#FFFFFF\" stroke=\"#0288D1\" stroke-width=\"3\"/>\n  <circle cx=\"25\" cy=\"38\" r=\"3\" fill=\"#0288D1\"/>\n  <circle cx=\"39\" cy=\"38\" r=\"3\" fill=\"#0288D1\"/>\n  <path d=\"M26 46 Q32 52 38 46\" fill=\"none\" stroke=\"#E53935\" stroke-width=\"2.5\" stroke-linecap=\"round\"/>\n</svg>\n"
+        },
+        "gold": {
+          "id": "gold",
+          "name": "Zé Gotinha Dourado",
+          "type": "svg",
+          "asset": "skins/gold.svg",
+          "width": 64,
+          "height": 64,
+          "src": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\">\n  <path d=\"M32 4 C32 4 12 28 12 42 A20 20 0 0 0 52 42 C52 28 32 4 32 4 Z\" fill=\"#FFD700\" stroke=\"#FF8F00\" stroke-width=\"3\"/>\n  <circle cx=\"25\" cy=\"38\" r=\"3\" fill=\"#37474F\"/>\n  <circle cx=\"39\" cy=\"38\" r=\"3\" fill=\"#37474F\"/>\n  <path d=\"M26 46 Q32 52 38 46\" fill=\"none\" stroke=\"#D84315\" stroke-width=\"2.5\" stroke-linecap=\"round\"/>\n</svg>\n"
+        },
+        "emerald": {
+          "id": "emerald",
+          "name": "Zé Gotinha Esmeralda E2E",
+          "type": "svg",
+          "asset": "skins/emerald-e2e.svg",
+          "width": 64,
+          "height": 64,
+          "src": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\">\n  <path d=\"M32 4 C32 4 12 28 12 42 A20 20 0 0 0 52 42 C52 28 32 4 32 4 Z\" fill=\"#00E676\" stroke=\"#00C853\" stroke-width=\"3\"/>\n  <circle cx=\"25\" cy=\"38\" r=\"3\" fill=\"#1B5E20\"/>\n  <circle cx=\"39\" cy=\"38\" r=\"3\" fill=\"#1B5E20\"/>\n  <path d=\"M26 46 Q32 52 38 46\" fill=\"none\" stroke=\"#1B5E20\" stroke-width=\"2.5\" stroke-linecap=\"round\"/>\n</svg>\n"
         }
       }
     }
   ],
   "campaigns": [
     {
-      "id": "saude_preventiva_v2",
-      "title": "Saúde Preventiva UBS Betim (Versão Remota 002)",
-      "priority": 10,
+      "id": "campanha_e2e_declarativa_2026",
+      "title": "Campanha de Validação E2E 100% Declarativa",
+      "startDate": "2026-01-01T00:00:00Z",
+      "endDate": "2026-12-31T23:59:59Z",
+      "priority": 15,
+      "active": true,
       "messages": [
         {
-          "id": "msg_v2_real",
-          "text": "🎉 Conteúdo remoto v2026.08.08.002 baixado diretamente do GitHub Raw!",
+          "id": "msg_campanha_e2e_sucesso",
+          "text": "🚀 Campanha E2E Declarativa ativa: Novo conteúdo consumido com zero alteração TypeScript!",
           "category": "vaccination",
+          "displayDurationSeconds": 10,
+          "priority": 15,
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "campanha_vacinacao_2026",
+      "title": "Campanha Permanente de Imunização Betim 2026",
+      "startDate": "2026-01-01T00:00:00Z",
+      "endDate": "2026-12-31T23:59:59Z",
+      "priority": 10,
+      "active": true,
+      "messages": [
+        {
+          "id": "msg_vacinacao_permanente",
+          "text": "💉 Vacinação é vida! Mantenha a caderneta da sua família em dia na UBS Petrovale.",
+          "category": "vaccination",
+          "displayDurationSeconds": 10,
+          "priority": 10,
+          "active": true
+        },
+        {
+          "id": "msg_prevencao_dengue_ativa",
+          "text": "🛡️ Proteja Betim contra a Dengue: Vistorie sua casa semanalmente!",
+          "category": "prevention",
+          "displayDurationSeconds": 10,
+          "priority": 8,
+          "active": true
+        }
+      ]
+    },
+    {
+      "id": "campanha_mensagens_gerais",
+      "title": "Mensagens Institucionais Gerais",
+      "priority": 5,
+      "active": true,
+      "messages": [
+        {
+          "id": "msg_atendimento_organizado",
+          "text": "Mantenha a atenção no painel de chamadas da recepção.",
+          "category": "general",
+          "displayDurationSeconds": 8
+        },
+        {
+          "id": "msg_documentos_necessarios",
+          "text": "Esteja com seu documento com foto e cartão do SUS em mãos ao ser chamado.",
+          "category": "general",
+          "displayDurationSeconds": 8
+        },
+        {
+          "id": "msg_vacina_gripe",
+          "text": "Campanha de Vacinação: Atualize seu cartão de vacinas contra Gripe e Covid-19!",
+          "category": "vaccination",
+          "displayDurationSeconds": 10
+        },
+        {
+          "id": "msg_dengue_prevencao",
+          "text": "Combate à Dengue: Elimine focos de água parada no seu quintal.",
+          "category": "prevention",
+          "displayDurationSeconds": 10
+        },
+        {
+          "id": "msg_alimentacao_saudavel",
+          "text": "Dica de Saúde: Beba bastante água e mantenha uma alimentação equilibrada.",
+          "category": "health_tip",
+          "displayDurationSeconds": 8
+        },
+        {
+          "id": "msg_e2e_declarativa_sucesso",
+          "text": "💎 Validação E2E: Conteúdo 100% declarativo adicionado sem alterar código TypeScript!",
+          "category": "health_tip",
           "displayDurationSeconds": 10
         }
       ]

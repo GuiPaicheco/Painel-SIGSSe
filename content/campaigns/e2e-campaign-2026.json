@@ -1,0 +1,18 @@
+{
+  "id": "campanha_e2e_declarativa_2026",
+  "title": "Campanha de Validação E2E 100% Declarativa",
+  "startDate": "2026-01-01T00:00:00Z",
+  "endDate": "2026-12-31T23:59:59Z",
+  "priority": 15,
+  "active": true,
+  "messages": [
+    {
+      "id": "msg_campanha_e2e_sucesso",
+      "text": "🚀 Campanha E2E Declarativa ativa: Novo conteúdo consumido com zero alteração TypeScript!",
+      "category": "vaccination",
+      "displayDurationSeconds": 10,
+      "priority": 15,
+      "active": true
+    }
+  ]
+}

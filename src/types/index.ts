@@ -21,7 +21,8 @@ export interface MascotSkinDefinition {
   id: string;
   name: string;
   type: 'svg' | 'spritesheet' | 'image';
-  src: string; // SVG sanitizado ou URL
+  src?: string; // SVG sanitizado ou URL
+  asset?: string; // Caminho relativo para arquivo vetorial estático
   width: number;
   height: number;
 }
@@ -49,6 +50,7 @@ export interface CampaignMessage {
   startDate?: string;
   endDate?: string;
   priority?: number;
+  active?: boolean;
 }
 
 export interface CampaignDefinition {
@@ -57,6 +59,7 @@ export interface CampaignDefinition {
   startDate?: string;
   endDate?: string;
   priority: number;
+  active?: boolean;
   messages: CampaignMessage[];
 }
 

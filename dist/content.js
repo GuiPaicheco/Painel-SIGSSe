@@ -665,9 +665,7 @@
     currentManifest = FALLBACK_MANIFEST;
     isFetching = false;
     listeners = /* @__PURE__ */ new Set();
-    // URL Padrão de QA / Desenvolvimento (Branch de Feature / Commit SHA 7ce18f0)
     static QA_REMOTE_URL = "https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/7ce18f0303f6ed609be138b362a7f5be450b2384/content/manifest.json";
-    // URL Padrão de Produção (Branch Main)
     static PROD_REMOTE_URL = "https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/main/content/manifest.json";
     remoteUrl = _RemoteContentManager.QA_REMOTE_URL;
     constructor() {
@@ -698,11 +696,6 @@
         }
       });
     }
-    /**
-     * Inicializa o gerenciador com Stale-While-Revalidate:
-     * 1. Carrega do cache local/fallback imediatamente.
-     * 2. Tenta atualização remota real em background via fetch HTTP no GitHub Raw.
-     */
     async init() {
       const cached = await this.loadFromLocalCache();
       if (cached && this.validateManifestSchema(cached)) {
@@ -730,22 +723,56 @@
     getCampaigns() {
       return this.currentManifest.campaigns || FALLBACK_MANIFEST.campaigns;
     }
-    getRandomCampaignMessage() {
+    /**
+     * Obtém campanhas ativas e vigentes considerando o horário atual (ou data informada)
+     */
+    getActiveCampaigns(referenceDate = /* @__PURE__ */ new Date()) {
       const campaigns = this.getCampaigns();
-      if (!campaigns || campaigns.length === 0) return null;
-      const allMessages = [];
-      campaigns.forEach((c) => {
-        if (c && Array.isArray(c.messages) && c.messages.length > 0) {
-          allMessages.push(...c.messages);
+      if (!campaigns || campaigns.length === 0) return [];
+      return campaigns.filter((c) => {
+        if (!c) return false;
+        if (c.active === false) return false;
+        if (c.startDate) {
+          const start = new Date(c.startDate);
+          if (!isNaN(start.getTime()) && referenceDate < start) return false;
         }
+        if (c.endDate) {
+          const end = new Date(c.endDate);
+          if (!isNaN(end.getTime()) && referenceDate > end) return false;
+        }
+        return true;
       });
-      if (allMessages.length === 0) return null;
-      const randomIndex = Math.floor(Math.random() * allMessages.length);
-      return allMessages[randomIndex];
     }
     /**
-     * Validação rígida do Schema de Conteúdo Remoto
+     * Obtém todas as mensagens de campanhas vigentes, filtradas por data e prioridade
      */
+    getActiveCampaignMessages(referenceDate = /* @__PURE__ */ new Date()) {
+      const activeCampaigns = this.getActiveCampaigns(referenceDate);
+      const validMessages = [];
+      activeCampaigns.forEach((c) => {
+        if (!c.messages || !Array.isArray(c.messages)) return;
+        c.messages.forEach((m) => {
+          if (!m) return;
+          if (m.active === false) return;
+          if (m.startDate) {
+            const start = new Date(m.startDate);
+            if (!isNaN(start.getTime()) && referenceDate < start) return;
+          }
+          if (m.endDate) {
+            const end = new Date(m.endDate);
+            if (!isNaN(end.getTime()) && referenceDate > end) return;
+          }
+          validMessages.push(m);
+        });
+      });
+      return validMessages;
+    }
+    getRandomCampaignMessage(referenceDate = /* @__PURE__ */ new Date()) {
+      const messages = this.getActiveCampaignMessages(referenceDate);
+      if (!messages || messages.length === 0) return null;
+      const randomIndex = Math.floor(Math.random() * messages.length);
+      return messages[randomIndex];
+    }
     validateManifestSchema(data) {
       if (!data || typeof data !== "object") return false;
       if (!data.contentVersion || typeof data.contentVersion !== "string") return false;
@@ -764,9 +791,6 @@
       }
       return true;
     }
-    /**
-     * Simulação local exclusivamente para testes de desenvolvimento offline
-     */
     async simulateRemoteUpdate(remoteData) {
       if (!this.validateManifestSchema(remoteData)) {
         console.warn("SIGSSe ContentManager: Simula\xE7\xE3o de atualiza\xE7\xE3o rejeitada por schema inv\xE1lido.");
@@ -822,9 +846,6 @@
         }
       });
     }
-    /**
-     * Caminho Principal de Produção/QA: Realiza o Fetch HTTP Real no GitHub Raw
-     */
     async checkRemoteUpdateInBackground() {
       if (this.isFetching) return false;
       this.isFetching = true;
@@ -988,11 +1009,11 @@
       const remoteManager = RemoteContentManager.getInstance();
       const mascotDef = remoteManager.getMascotById(this.skinId);
       let svgContent = "";
-      if (mascotDef && mascotDef.skins && mascotDef.skins.default) {
+      if (mascotDef && mascotDef.skins && mascotDef.skins.default && mascotDef.skins.default.src) {
         svgContent = mascotDef.skins.default.src;
       } else {
         const defaultMascot = remoteManager.getMascotById("gotinha");
-        svgContent = defaultMascot?.skins.default.src || `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="#0288D1"/></svg>`;
+        svgContent = defaultMascot?.skins?.default?.src || `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="#0288D1"/></svg>`;
       }
       this.mascotEl.innerHTML = svgContent;
       const svg = this.mascotEl.querySelector("svg");

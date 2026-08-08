@@ -1,0 +1,32 @@
+{
+  "id": "gotinha",
+  "name": "Zé Gotinha Saúde",
+  "version": "2.0.0",
+  "defaultSkin": "emerald",
+  "skins": {
+    "default": {
+      "id": "default",
+      "name": "Zé Gotinha Clássico",
+      "type": "svg",
+      "asset": "skins/default.svg",
+      "width": 64,
+      "height": 64
+    },
+    "gold": {
+      "id": "gold",
+      "name": "Zé Gotinha Dourado",
+      "type": "svg",
+      "asset": "skins/gold.svg",
+      "width": 64,
+      "height": 64
+    },
+    "emerald": {
+      "id": "emerald",
+      "name": "Zé Gotinha Esmeralda E2E",
+      "type": "svg",
+      "asset": "skins/emerald-e2e.svg",
+      "width": 64,
+      "height": 64
+    }
+  }
+}

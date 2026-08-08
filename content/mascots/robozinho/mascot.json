@@ -1,0 +1,16 @@
+{
+  "id": "robozinho_azul",
+  "name": "Robozinho Saúde",
+  "version": "2.0.0",
+  "defaultSkin": "default",
+  "skins": {
+    "default": {
+      "id": "default",
+      "name": "Robozinho Azul",
+      "type": "svg",
+      "asset": "skins/default.svg",
+      "width": 64,
+      "height": 64
+    }
+  }
+}
