@@ -8,7 +8,10 @@
     speedMultiplier: 1,
     size: 64,
     opacity: 0.9,
-    callAwareness: true
+    callAwareness: true,
+    campaignsEnabled: true,
+    remoteContentAutoUpdate: true,
+    lastUpdatedTimestamp: Date.now()
   };
   var MascotConfigManager = class {
     /**
@@ -16,132 +19,134 @@
      */
     static async load() {
       return new Promise((resolve) => {
-        chrome.storage.local.get(null, (items) => {
-          resolve({
-            ...DEFAULT_SETTINGS,
-            ...items
+        if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+          chrome.storage.local.get(null, (items) => {
+            resolve({
+              ...DEFAULT_SETTINGS,
+              ...items
+            });
           });
-        });
+        } else {
+          resolve(DEFAULT_SETTINGS);
+        }
       });
     }
     /**
-     * Salva configurações genéricas
+     * Salva configurações parciais ou completas
      */
     static async save(settings) {
       return new Promise((resolve) => {
-        chrome.storage.local.set(settings, () => {
+        if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+          chrome.storage.local.set({ ...settings, lastUpdatedTimestamp: Date.now() }, () => {
+            resolve();
+          });
+        } else {
           resolve();
-        });
+        }
       });
     }
     /**
      * Escuta alterações de configurações em tempo real
      */
     static onChange(callback) {
-      chrome.storage.onChanged.addListener((changes, areaName) => {
-        if (areaName === "local") {
-          callback(changes);
-        }
-      });
+      if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
+        chrome.storage.onChanged.addListener((changes, areaName) => {
+          if (areaName === "local") {
+            callback(changes);
+          }
+        });
+      }
     }
   };
 
   // src/ui/popup/popup.ts
-  document.addEventListener("DOMContentLoaded", async () => {
-    const settings = await MascotConfigManager.load();
-    const toggleMascot = document.getElementById("toggle-mascot");
-    const sliderCount = document.getElementById("slider-count");
-    const sliderSize = document.getElementById("slider-size");
-    const sliderSpeed = document.getElementById("slider-speed");
-    const sliderOpacity = document.getElementById("slider-opacity");
-    const checkboxCall = document.getElementById("checkbox-call-awareness");
-    const btnAccess = document.getElementById("btn-access-panel");
-    const valCount = document.getElementById("val-count");
-    const valSize = document.getElementById("val-size");
-    const valSpeed = document.getElementById("val-speed");
-    const valOpacity = document.getElementById("val-opacity");
-    const skinCards = document.querySelectorAll(".skin-card");
-    toggleMascot.checked = settings.mascotEnabled;
-    sliderCount.value = String(settings.mascotCount || 1);
-    sliderSize.value = String(settings.size);
-    sliderSpeed.value = String(settings.speedMultiplier);
-    sliderOpacity.value = String(settings.opacity);
-    checkboxCall.checked = settings.callAwareness;
-    updateReadouts(settings.mascotCount || 1, settings.size, settings.speedMultiplier, settings.opacity);
-    setupActiveSkinCard(settings.mascotSkin);
-    toggleControlStates(settings.mascotEnabled);
-    toggleMascot.addEventListener("change", async () => {
-      const enabled = toggleMascot.checked;
-      toggleControlStates(enabled);
-      await MascotConfigManager.save({ mascotEnabled: enabled });
-    });
-    sliderCount.addEventListener("input", async () => {
-      const mascotCount = parseInt(sliderCount.value);
-      valCount.textContent = String(mascotCount);
-      await MascotConfigManager.save({ mascotCount });
-    });
-    sliderSize.addEventListener("input", async () => {
-      const size = parseInt(sliderSize.value);
-      valSize.textContent = `${size}px`;
-      await MascotConfigManager.save({ size });
-    });
-    sliderSpeed.addEventListener("input", async () => {
-      const speed = parseFloat(sliderSpeed.value);
-      valSpeed.textContent = `${speed.toFixed(1)}x`;
-      await MascotConfigManager.save({ speedMultiplier: speed });
-    });
-    sliderOpacity.addEventListener("input", async () => {
-      const opacity = parseFloat(sliderOpacity.value);
-      valOpacity.textContent = `${Math.round(opacity * 100)}%`;
-      await MascotConfigManager.save({ opacity });
-    });
-    checkboxCall.addEventListener("change", async () => {
-      const callAwareness = checkboxCall.checked;
-      await MascotConfigManager.save({ callAwareness });
-    });
-    btnAccess.addEventListener("click", () => {
-      chrome.tabs.create({
-        url: "http://sigss.betim.mg.gov.br/unique-panel/panel-screen/94afeb1a-5112-4d61-bce8-dbf8f5b0a03d"
-      });
-    });
-    skinCards.forEach((card) => {
-      card.addEventListener("click", async () => {
-        if (toggleMascot.checked === false) return;
-        skinCards.forEach((c) => c.classList.remove("active"));
-        card.classList.add("active");
-        const skin = card.getAttribute("data-skin");
-        await MascotConfigManager.save({ mascotSkin: skin });
-      });
-    });
-    function updateReadouts(count, size, speed, opacity) {
-      valCount.textContent = String(count);
-      valSize.textContent = `${size}px`;
-      valSpeed.textContent = `${speed.toFixed(1)}x`;
-      valOpacity.textContent = `${Math.round(opacity * 100)}%`;
+  var PopupController = class {
+    mascotEnabled = document.getElementById("mascotEnabled");
+    mascotSkin = document.getElementById("mascotSkin");
+    size = document.getElementById("size");
+    sizeVal = document.getElementById("sizeVal");
+    speedMultiplier = document.getElementById("speedMultiplier");
+    speedVal = document.getElementById("speedVal");
+    opacity = document.getElementById("opacity");
+    opacityVal = document.getElementById("opacityVal");
+    callAwareness = document.getElementById("callAwareness");
+    campaignsEnabled = document.getElementById("campaignsEnabled");
+    countButtons = document.querySelectorAll(".btn-count");
+    syncStatus = document.getElementById("syncStatus");
+    currentSettings = null;
+    async init() {
+      this.currentSettings = await MascotConfigManager.load();
+      this.populateUI(this.currentSettings);
+      this.bindEvents();
     }
-    function setupActiveSkinCard(activeSkin) {
-      skinCards.forEach((card) => {
-        const skin = card.getAttribute("data-skin");
-        if (skin === activeSkin) {
-          card.classList.add("active");
+    populateUI(settings) {
+      this.mascotEnabled.checked = settings.mascotEnabled;
+      this.mascotSkin.value = settings.mascotSkin;
+      this.size.value = settings.size.toString();
+      this.sizeVal.textContent = `${settings.size}px`;
+      this.speedMultiplier.value = settings.speedMultiplier.toString();
+      this.speedVal.textContent = `${settings.speedMultiplier.toFixed(1)}x`;
+      this.opacity.value = settings.opacity.toString();
+      this.opacityVal.textContent = `${Math.round(settings.opacity * 100)}%`;
+      this.callAwareness.checked = settings.callAwareness;
+      this.campaignsEnabled.checked = settings.campaignsEnabled;
+      this.updateCountButtons(settings.mascotCount);
+      if (this.syncStatus) {
+        this.syncStatus.textContent = "Conte\xFAdo Remoto: Sincronizado (v2.0.0)";
+      }
+    }
+    updateCountButtons(activeCount) {
+      this.countButtons.forEach((btn) => {
+        const count = parseInt(btn.getAttribute("data-count") || "1", 10);
+        if (count === activeCount) {
+          btn.classList.add("active");
         } else {
-          card.classList.remove("active");
+          btn.classList.remove("active");
         }
       });
     }
-    function toggleControlStates(enabled) {
-      const opacityVal = enabled ? "1.0" : "0.4";
-      const pointerEvents = enabled ? "auto" : "none";
-      [sliderCount, sliderSize, sliderSpeed, sliderOpacity, checkboxCall].forEach((control) => {
-        control.disabled = !enabled;
-        control.parentElement.style.opacity = opacityVal;
+    bindEvents() {
+      this.mascotEnabled.addEventListener("change", () => {
+        MascotConfigManager.save({ mascotEnabled: this.mascotEnabled.checked });
       });
-      const selectorPanel = document.querySelector(".skin-selector");
-      if (selectorPanel) {
-        selectorPanel.style.opacity = opacityVal;
-        selectorPanel.style.pointerEvents = pointerEvents;
-      }
+      this.mascotSkin.addEventListener("change", () => {
+        MascotConfigManager.save({ mascotSkin: this.mascotSkin.value });
+      });
+      this.countButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const count = parseInt(btn.getAttribute("data-count") || "1", 10);
+          this.updateCountButtons(count);
+          MascotConfigManager.save({ mascotCount: count });
+        });
+      });
+      this.size.addEventListener("input", () => {
+        const val = parseInt(this.size.value, 10);
+        this.sizeVal.textContent = `${val}px`;
+        MascotConfigManager.save({ size: val });
+      });
+      this.speedMultiplier.addEventListener("input", () => {
+        const val = parseFloat(this.speedMultiplier.value);
+        this.speedVal.textContent = `${val.toFixed(1)}x`;
+        MascotConfigManager.save({ speedMultiplier: val });
+      });
+      this.opacity.addEventListener("input", () => {
+        const val = parseFloat(this.opacity.value);
+        this.opacityVal.textContent = `${Math.round(val * 100)}%`;
+        MascotConfigManager.save({ opacity: val });
+      });
+      this.callAwareness.addEventListener("change", () => {
+        MascotConfigManager.save({ callAwareness: this.callAwareness.checked });
+      });
+      this.campaignsEnabled.addEventListener("change", () => {
+        MascotConfigManager.save({ campaignsEnabled: this.campaignsEnabled.checked });
+      });
     }
+  };
+  document.addEventListener("DOMContentLoaded", () => {
+    const popup = new PopupController();
+    popup.init().catch((err) => {
+      console.error("Erro ao inicializar Popup Controller:", err);
+    });
   });
 })();
 //# sourceMappingURL=popup.js.map

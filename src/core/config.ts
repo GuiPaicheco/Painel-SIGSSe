@@ -1,12 +1,4 @@
-export interface MascotSettings {
-  mascotEnabled: boolean;
-  mascotSkin: 'gotinha' | 'robozinho_azul' | 'robozinho_rosa' | 'robozinho_verde' | 'gatinho_laranja' | 'gatinho_cinza' | 'gatinho_preto' | 'mixed';
-  mascotCount: number; // Quantidade de mascotes (1 a 4)
-  speedMultiplier: number;
-  size: number;
-  opacity: number;
-  callAwareness: boolean;
-}
+import { MascotSettings } from '../types';
 
 export const DEFAULT_SETTINGS: MascotSettings = {
   mascotEnabled: true,
@@ -15,46 +7,56 @@ export const DEFAULT_SETTINGS: MascotSettings = {
   speedMultiplier: 1.0,
   size: 64,
   opacity: 0.9,
-  callAwareness: true
+  callAwareness: true,
+  campaignsEnabled: true,
+  remoteContentAutoUpdate: true,
+  lastUpdatedTimestamp: Date.now()
 };
 
 export class MascotConfigManager {
-  
   /**
    * Obtém todas as configurações salvas ou retorna os valores padrão
    */
-  static async load(): Promise<MascSettingsSchema> {
+  static async load(): Promise<MascotSettings> {
     return new Promise((resolve) => {
-      chrome.storage.local.get(null, (items) => {
-        resolve({
-          ...DEFAULT_SETTINGS,
-          ...items
-        } as MascotSettings);
-      });
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.get(null, (items) => {
+          resolve({
+            ...DEFAULT_SETTINGS,
+            ...items
+          } as MascotSettings);
+        });
+      } else {
+        resolve(DEFAULT_SETTINGS);
+      }
     });
   }
 
   /**
-   * Salva configurações genéricas
+   * Salva configurações parciais ou completas
    */
-  static async save(settings: Partial<MascSettingsSchema>): Promise<void> {
+  static async save(settings: Partial<MascotSettings>): Promise<void> {
     return new Promise((resolve) => {
-      chrome.storage.local.set(settings, () => {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        chrome.storage.local.set({ ...settings, lastUpdatedTimestamp: Date.now() }, () => {
+          resolve();
+        });
+      } else {
         resolve();
-      });
+      }
     });
   }
 
   /**
    * Escuta alterações de configurações em tempo real
    */
-  static onChange(callback: (changes: chrome.storage.StorageChange) => void) {
-    chrome.storage.onChanged.addListener((changes, areaName) => {
-      if (areaName === 'local') {
-        callback(changes);
-      }
-    });
+  static onChange(callback: (changes: { [key: string]: chrome.storage.StorageChange }) => void) {
+    if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.onChanged) {
+      chrome.storage.onChanged.addListener((changes, areaName) => {
+        if (areaName === 'local') {
+          callback(changes);
+        }
+      });
+    }
   }
 }
-
-type MascSettingsSchema = MascotSettings;

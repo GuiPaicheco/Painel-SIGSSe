@@ -27,13 +27,13 @@ export class SigssPanelAdapter {
       url.includes('unique-panel/panel-screen') || 
       url.includes('mock_panel.html') ||
       document.title.toLowerCase().includes('painel') ||
-      !!document.querySelector('.called-patient, #current-patient, .panel-container') ||
+      !!document.querySelector('.called-patient, #current-patient, .panel-container, .calling-card') ||
       this.hasCalledPatientHeuristic()
     );
   }
 
   private static hasCalledPatientHeuristic(): boolean {
-    const bodyText = document.body.innerText.toUpperCase();
+    const bodyText = (document.body ? document.body.innerText || '' : '').toUpperCase();
     return bodyText.includes('CHAMANDO') || bodyText.includes('ÚLTIMAS CHAMADAS') || bodyText.includes('HISTÓRICO');
   }
 
@@ -64,11 +64,9 @@ export class SigssPanelAdapter {
       }
 
       if (chamandoHeader) {
-        // Subir no DOM a partir do cabeçalho para achar a coluna da esquerda (container da chamada)
         let parent = chamandoHeader.parentElement;
         while (parent && parent !== document.body) {
           const rect = parent.getBoundingClientRect();
-          // O container deve ter tamanho razoável e não ocupar toda a tela
           if (rect.width > 200 && rect.width < window.innerWidth * 0.8) {
             callingCard = parent;
             break;
@@ -78,7 +76,6 @@ export class SigssPanelAdapter {
       }
     }
 
-    // Se ainda assim não achar, usa a metade esquerda da tela como fallback de busca
     const searchRoot = callingCard || document.body;
 
     // 3. Buscar os campos de chamada ativa usando seletores diretos
@@ -86,7 +83,7 @@ export class SigssPanelAdapter {
     let localName = document.querySelector('#current-local, .called-local, .chamando-local, .sala-chamada') as HTMLElement | null;
     let professionalName = document.querySelector('#current-professional, .called-professional, .chamando-profissional') as HTMLElement | null;
 
-    // 4. Se falhar nos seletores diretos, aplica heurística de rótulos (Busca do valor abaixo do texto explicativo)
+    // 4. Se falhar nos seletores diretos, aplica heurística de rótulos
     if (!patientName) {
       patientName = this.findValueByLabelHeuristic(searchRoot, ['PACIENTE'], historySection);
     }
@@ -115,28 +112,24 @@ export class SigssPanelAdapter {
     labelKeywords: string[], 
     excludeContainer: HTMLElement | null
   ): HTMLElement | null {
-    // Buscar todos os elementos de texto possíveis dentro do container de busca
     const all = Array.from(root.querySelectorAll('span, div, h1, h2, h3, p, td, th, b, strong, label'));
     
     for (let i = 0; i < all.length; i++) {
       const el = all[i] as HTMLElement;
       
-      // Ignorar se estiver contido no container excluído (ex: histórico lateral)
       if (excludeContainer && excludeContainer.contains(el)) {
         continue;
       }
 
       const text = (el.textContent || '').trim().toUpperCase();
       
-      // Verifica se o texto é exatamente o rótulo (ex: "PACIENTE") ou começa com ele
       const matchesLabel = labelKeywords.some(keyword => 
         text === keyword || 
-        text.startsWith(keyword + ':') || 
-        text.startsWith(keyword + ' ')
+        text === keyword + ':' ||
+        text.startsWith(keyword + ':')
       );
 
       if (matchesLabel) {
-        // Encontramos o rótulo. Procuramos o próximo elemento folha com conteúdo textual
         for (let j = i + 1; j < all.length; j++) {
           const valEl = all[j] as HTMLElement;
           
@@ -145,19 +138,16 @@ export class SigssPanelAdapter {
           }
 
           const valText = (valEl.textContent || '').trim();
+          const valUpper = valText.toUpperCase();
 
-          // Critérios de validação do valor:
-          // - Não pode ser vazio ou apenas hífen
-          // - Deve ser um nó folha (para não capturar blocos contendo múltiplos textos repetidos)
-          // - Não deve ser outro rótulo explicativo
+          const isExactHeaderLabel = labelKeywords.some(k => valUpper === k || valUpper === k + ':') ||
+                                    valUpper === 'PACIENTE' || valUpper === 'LOCAL' || valUpper === 'PROFISSIONAL';
+
           if (
             valText && 
             valText !== '-' && 
             valEl.children.length === 0 &&
-            !labelKeywords.some(k => valText.toUpperCase().includes(k)) &&
-            !valText.toUpperCase().includes('PACIENTE') &&
-            !valText.toUpperCase().includes('LOCAL') &&
-            !valText.toUpperCase().includes('PROFISSIONAL')
+            !isExactHeaderLabel
           ) {
             return valEl;
           }

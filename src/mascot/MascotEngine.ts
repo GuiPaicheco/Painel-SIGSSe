@@ -1,6 +1,6 @@
 import { SigssPanelAdapter } from '../utils/sigssPanelAdapter';
 
-export type MascotState = 'IDLE' | 'WALK' | 'RUN' | 'JUMP' | 'FALL' | 'CLIMB' | 'SLEEP' | 'CELEBRATE' | 'TRIP' | 'STRETCH';
+export type MascotState = 'IDLE' | 'WALK' | 'RUN' | 'JUMP' | 'FALL' | 'CLIMB' | 'SLEEP' | 'CELEBRATE' | 'TRIP' | 'STRETCH' | 'SPEAKING' | 'DRAGGED';
 export type MascotDirection = 'LEFT' | 'RIGHT' | 'UP' | 'DOWN';
 
 export interface MascotConfig {
@@ -28,8 +28,8 @@ export class MascotEngine {
   public state: MascotState = 'FALL';
   public direction: MascotDirection = 'RIGHT';
 
-  // Configurações
-  private config: MascotConfig = {
+  // Configurações públicas para o renderer
+  public config: MascotConfig = {
     speedMultiplier: 1.0,
     size: 64,
     opacity: 0.9,
@@ -42,7 +42,7 @@ export class MascotEngine {
   private normalSpeed = 1.1;
   private runSpeed = 2.6;
   private climbSpeed = 0.9;
-  private inertia = 0.15; // Fator de inércia para movimento suave
+  private inertia = 0.15;
 
   // Ciclo de comportamento
   private nextStateTime = 0;
@@ -59,13 +59,25 @@ export class MascotEngine {
   public patientCallCount = 1;
   public activeCallMessage = '';
   public lastAnnouncedHour = -1;
-  public pastPatients: string[] = []; // Nomes curtos das últimas pessoas chamadas
+  public pastPatients: string[] = [];
 
   // Callback de desenho
   private onUpdateCallback: () => void = () => {};
 
   constructor() {
     this.resetToSafety();
+  }
+
+  public get facingRight(): boolean {
+    return this.direction === 'RIGHT';
+  }
+
+  public setState(newState: MascotState): void {
+    this.state = newState;
+    if (newState === 'DRAGGED') {
+      this.vx = 0;
+      this.vy = 0;
+    }
   }
 
   public resetToSafety() {
@@ -96,25 +108,22 @@ export class MascotEngine {
     this.onUpdateCallback = callback;
   }
 
-  /**
-   * Ciclo principal de atualização (Game Loop)
-   */
   public update() {
+    if (this.state === 'DRAGGED') {
+      this.onUpdateCallback();
+      return;
+    }
+
     this.applyBehavior();
     this.applyPhysics();
     this.onUpdateCallback();
   }
 
-  /**
-   * Comportamento e tomadas de decisão inteligentes
-   */
   private applyBehavior() {
     const now = Date.now();
 
-    // Atualizar dados de contexto do painel em tempo real
     this.updateContextData();
 
-    // Se estiver celebrando chamada, o comportamento é prioritário
     if (this.isCelebrating) {
       if (now > this.celebrationEndTime) {
         this.isCelebrating = false;
@@ -128,7 +137,6 @@ export class MascotEngine {
       return;
     }
 
-    // 1. Tratamento do Estado Especial: Tropeçar (Trip)
     if (this.state === 'TRIP') {
       if (now > this.actionEndTime) {
         this.state = 'IDLE';
@@ -138,7 +146,6 @@ export class MascotEngine {
       return;
     }
 
-    // 2. Tratamento do Estado Especial: Alongar (Stretch)
     if (this.state === 'STRETCH') {
       if (now > this.actionEndTime) {
         this.state = 'IDLE';
@@ -148,7 +155,6 @@ export class MascotEngine {
       return;
     }
 
-    // 3. Comportamento aleatório normal baseado em tempo
     if (now > this.nextStateTime) {
       this.decideNextState(now);
     }
@@ -159,9 +165,6 @@ export class MascotEngine {
     this.lastAnnouncedHour = now.getHours();
   }
 
-  /**
-   * Movimento direcionado quando há chamadas na UBS
-   */
   private executeCelebrationBehavior() {
     const speed = this.runSpeed * this.config.speedMultiplier;
     
@@ -169,7 +172,6 @@ export class MascotEngine {
       return;
     }
 
-    // Distância horizontal até a caixa de chamada principal
     const dx = this.celebrationTargetX - (this.x + this.width / 2);
     
     if (Math.abs(dx) > 60) {
@@ -182,7 +184,6 @@ export class MascotEngine {
         this.direction = 'LEFT';
       }
       
-      // Se bater em uma parede enquanto corre para comemorar, tenta pular
       const floor = this.getFloorLevelAt(this.x);
       const nextFloor = this.getFloorLevelAt(this.x + (dx > 0 ? 25 : -25));
       if (nextFloor < floor - 20 && this.y >= floor - 5) {
@@ -191,29 +192,21 @@ export class MascotEngine {
         this.targetVx = (dx > 0 ? speed : -speed) * 1.2;
       }
     } else {
-      // Chegou! Fica parado comemorando de forma amigável (sem pular ou tremer)
       this.state = 'CELEBRATE';
       this.targetVx = 0;
       this.vx = 0;
     }
   }
 
-  /**
-   * Decide aleatoriamente qual será a próxima ação
-   */
   private decideNextState(now: number) {
     const rand = Math.random();
-    const duration = 2500 + Math.random() * 4500; // 2.5s a 7s
+    const duration = 2500 + Math.random() * 4500;
     this.nextStateTime = now + duration;
 
-    // Se estiver caindo ou pulando, aguarda
     if (this.state === 'JUMP' || this.state === 'FALL') {
       return;
     }
 
-    const currentFloor = this.getFloorLevelAt(this.x);
-
-    // Evitar presas nas bordas da tela
     if (this.x <= 15) {
       this.direction = 'RIGHT';
       this.state = 'WALK';
@@ -227,7 +220,6 @@ export class MascotEngine {
       return;
     }
 
-    // Probabilidades de Comportamento
     if (rand < 0.35) {
       this.state = 'WALK';
       const goRight = Math.random() > 0.5;
@@ -283,10 +275,6 @@ export class MascotEngine {
     }
   }
 
-  /**
-   * Dispara a comemoração de chamada de paciente de forma imediata.
-   * Adiciona o paciente ao histórico de chamadas recentes.
-   */
   public triggerCallReaction(patientName: string, local: string, professional: string) {
     if (!this.config.callAwareness) return;
 
@@ -300,12 +288,10 @@ export class MascotEngine {
     this.currentLocal = local;
     this.currentProfessional = professional;
 
-    // Gerar a fala personalizada de anúncio UMA ÚNICA VEZ e salvá-la para evitar oscilações em loop
     this.activeCallMessage = this.generatePersonalizedCallMessage(patientName, local, professional);
 
     const elements = SigssPanelAdapter.getElements();
     
-    // Adicionar nome curto do paciente ao histórico de comemorações passadas
     const shortName = this.getShortName(patientName);
     if (shortName && !this.pastPatients.includes(shortName)) {
       this.pastPatients.unshift(shortName);
@@ -324,11 +310,10 @@ export class MascotEngine {
     }
 
     this.isCelebrating = true;
-    this.celebrationEndTime = Date.now() + 18000; // Exibe o anúncio por 18 segundos completos
+    this.celebrationEndTime = Date.now() + 18000;
     
     this.actionEndTime = 0;
     
-    // Impulso inicial (pulo simples) em direção ao card
     this.vy = this.jumpForce * 1.1;
     this.state = 'JUMP';
     
@@ -338,14 +323,10 @@ export class MascotEngine {
     this.vx = this.targetVx * 0.8;
   }
 
-  /**
-   * Constrói dinamicamente uma fala personalizada para o anúncio
-   */
   private generatePersonalizedCallMessage(patientName: string, local: string, professional: string): string {
     const name = this.getShortName(patientName);
     const count = this.patientCallCount;
 
-    // 1. Tratamento para rechamadas
     if (count === 2) {
       return `🔔 Segunda chamada para ${name}! Favor ir para o(a) ${local}.`;
     }
@@ -353,7 +334,6 @@ export class MascotEngine {
       return `⚠️ ATENÇÃO: Última chamada para ${name}! Por favor, vá para o(a) ${local} urgente! 🚪`;
     }
 
-    // 2. Por Local/Sala
     const localUpper = local.toUpperCase();
     if (localUpper.includes('VACINA')) {
       return `💉 Hora da gotinha ou vacina! ${name}, vá para a ${local}. Sem choro! 😉`;
@@ -371,7 +351,6 @@ export class MascotEngine {
       return `🩺 Medindo pressão e peso! ${name}, vá ao(à) ${local}.`;
     }
 
-    // 3. Por Profissional
     if (professional && professional !== '-' && professional.length > 3) {
       const profShort = professional.split(/\s+/).slice(0, 2).map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
       const rand = Math.random();
@@ -382,7 +361,6 @@ export class MascotEngine {
       }
     }
 
-    // 4. Geral
     const templates = [
       `✨ ${name}, sua vez! Dirija-se ao(à) ${local}. Boa sorte! 🍀`,
       `🚪 O(A) ${local} está te chamando, ${name}! Foco na saúde. 🩺`,
@@ -392,23 +370,16 @@ export class MascotEngine {
     return templates[Math.floor(Math.random() * templates.length)];
   }
 
-  /**
-   * Helper para formatar o nome completo em Nome + Sobrenome
-   */
   private getShortName(fullName: string): string {
     if (!fullName) return '';
     const nameParts = fullName.trim().split(/\s+/);
     if (nameParts.length > 1) {
-      // Primeira letra maiúscula, restante minúscula para estética
       const format = (str: string) => str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
       return `${format(nameParts[0])} ${format(nameParts[nameParts.length - 1])}`;
     }
     return fullName;
   }
 
-  /**
-   * Aplica física com aceleração e desaceleração linear
-   */
   private applyPhysics() {
     if (this.state === 'CLIMB') {
       this.y += this.vy;

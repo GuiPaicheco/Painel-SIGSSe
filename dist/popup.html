@@ -3,212 +3,104 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Mascote SIGSS+</title>
+  <title>Painel SIGSSe — Configurações do Mascote</title>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
-  <div class="popup-wrapper">
-    <!-- Cabeçalho -->
-    <header class="popup-header">
-      <div class="header-main">
-        <div class="logo-icon">🔔</div>
-        <div class="logo-text">
-          <h1>SIGSS+ Mascote</h1>
-          <p>Painel de Chamadas UBS</p>
+  <div class="popup-container">
+    <header class="header">
+      <div class="logo-title">
+        <span class="logo-icon">💧</span>
+        <div>
+          <h1>Painel SIGSSe</h1>
+          <p class="subtitle">Mascotes & Campanhas de Saúde</p>
         </div>
       </div>
-      <!-- Toggle de Ativação -->
-      <div class="toggle-container">
-        <label class="switch">
-          <input type="checkbox" id="toggle-mascot" checked>
-          <span class="slider round"></span>
-        </label>
-      </div>
+      <label class="switch">
+        <input type="checkbox" id="mascotEnabled" checked>
+        <span class="slider round"></span>
+      </label>
     </header>
 
-    <!-- Corpo das Configurações -->
-    <main class="popup-body">
-      <!-- Seletor de Mascotes (Cards) -->
-      <section class="section-panel">
-        <h2 class="section-title">Escolha seu Companheiro</h2>
-        <div class="skin-selector">
-          <!-- Card Gotinha -->
-          <div class="skin-card active" data-skin="gotinha">
-            <div class="skin-preview">
-              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M32 6C32 6 16 28 16 38C16 47 23 51 32 51C41 51 48 47 48 38C48 28 32 6 32 6Z" fill="#ffffff" stroke="#3b82f6" stroke-width="3"/>
-                <path d="M20 40C23 43 41 43 44 40C44 40 42 48 32 48C22 48 20 40 20 40Z" fill="#60a5fa" opacity="0.8"/>
-                <circle cx="26" cy="30" r="3" fill="#1e293b"/>
-                <circle cx="38" cy="30" r="3" fill="#1e293b"/>
-                <path d="M29 34.5C29.5 35.5 34.5 35.5 35 34.5" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/>
-              </svg>
-            </div>
-            <span class="skin-name">Gotinha</span>
-          </div>
-
-          <!-- Card Gatinho Laranja -->
-          <div class="skin-card" data-skin="gatinho_laranja">
-            <div class="skin-preview">
-              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="14" y="22" width="36" height="32" rx="12" fill="#f59e0b" stroke="#d97706" stroke-width="2.5"/>
-                <rect x="18" y="26" width="28" height="24" rx="8" fill="#fbbf24"/>
-                <path d="M18 23L12 10L24 21Z" fill="#d97706"/>
-                <path d="M38 23L44 10L32 21Z" fill="#d97706"/>
-                <circle cx="23" cy="32" r="3" fill="#1e293b"/>
-                <circle cx="35" cy="32" r="3" fill="#1e293b"/>
-              </svg>
-            </div>
-            <span class="skin-name">Gato Laranja</span>
-          </div>
-
-          <!-- Card Gatinho Cinza -->
-          <div class="skin-card" data-skin="gatinho_cinza">
-            <div class="skin-preview">
-              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="14" y="22" width="36" height="32" rx="12" fill="#94a3b8" stroke="#475569" stroke-width="2.5"/>
-                <rect x="18" y="26" width="28" height="24" rx="8" fill="#cbd5e1"/>
-                <path d="M18 23L12 10L24 21Z" fill="#475569"/>
-                <path d="M38 23L44 10L32 21Z" fill="#475569"/>
-                <circle cx="23" cy="32" r="3" fill="#1e293b"/>
-                <circle cx="35" cy="32" r="3" fill="#1e293b"/>
-              </svg>
-            </div>
-            <span class="skin-name">Gato Cinza</span>
-          </div>
-
-          <!-- Card Gatinho Preto -->
-          <div class="skin-card" data-skin="gatinho_preto">
-            <div class="skin-preview">
-              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect x="14" y="22" width="36" height="32" rx="12" fill="#1e293b" stroke="#0f172a" stroke-width="2.5"/>
-                <rect x="18" y="26" width="28" height="24" rx="8" fill="#475569"/>
-                <path d="M18 23L12 10L24 21Z" fill="#0f172a"/>
-                <path d="M38 23L44 10L32 21Z" fill="#0f172a"/>
-                <circle cx="23" cy="32" r="3" fill="#ffffff"/>
-                <circle cx="35" cy="32" r="3" fill="#ffffff"/>
-              </svg>
-            </div>
-            <span class="skin-name">Gato Preto</span>
-          </div>
-
-          <!-- Card Robozinho Azul -->
-          <div class="skin-card" data-skin="robozinho_azul">
-            <div class="skin-preview">
-              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <line x1="32" y1="12" x2="32" y2="6" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
-                <circle cx="32" cy="6" r="2.5" fill="#3b82f6"/>
-                <rect x="16" y="12" width="32" height="30" rx="15" fill="#e2e8f0" stroke="#64748b" stroke-width="2.5"/>
-                <rect x="22" y="17" width="20" height="13" rx="4" fill="#0f172a"/>
-                <rect x="26" y="21" width="3" height="4" rx="1" fill="#38bdf8"/>
-                <rect x="35" y="21" width="3" height="4" rx="1" fill="#38bdf8"/>
-              </svg>
-            </div>
-            <span class="skin-name">Robô Azul</span>
-          </div>
-
-          <!-- Card Robozinho Rosa -->
-          <div class="skin-card" data-skin="robozinho_rosa">
-            <div class="skin-preview">
-              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <line x1="32" y1="12" x2="32" y2="6" stroke="#db2777" stroke-width="3" stroke-linecap="round"/>
-                <circle cx="32" cy="6" r="2.5" fill="#ec4899"/>
-                <rect x="16" y="12" width="32" height="30" rx="15" fill="#fce7f3" stroke="#db2777" stroke-width="2.5"/>
-                <rect x="22" y="17" width="20" height="13" rx="4" fill="#0f172a"/>
-                <rect x="26" y="21" width="3" height="4" rx="1" fill="#ec4899"/>
-                <rect x="35" y="21" width="3" height="4" rx="1" fill="#ec4899"/>
-              </svg>
-            </div>
-            <span class="skin-name">Robô Rosa</span>
-          </div>
-
-          <!-- Card Robozinho Verde -->
-          <div class="skin-card" data-skin="robozinho_verde">
-            <div class="skin-preview">
-              <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <line x1="32" y1="12" x2="32" y2="6" stroke="#059669" stroke-width="3" stroke-linecap="round"/>
-                <circle cx="32" cy="6" r="2.5" fill="#10b981"/>
-                <rect x="16" y="12" width="32" height="30" rx="15" fill="#d1fae5" stroke="#059669" stroke-width="2.5"/>
-                <rect x="22" y="17" width="20" height="13" rx="4" fill="#0f172a"/>
-                <rect x="26" y="21" width="3" height="4" rx="1" fill="#34d399"/>
-                <rect x="35" y="21" width="3" height="4" rx="1" fill="#34d399"/>
-              </svg>
-            </div>
-            <span class="skin-name">Robô Verde</span>
-          </div>
-
-          <!-- Card Misturado -->
-          <div class="skin-card" data-skin="mixed">
-            <div class="skin-preview">
-              <span class="mixed-emoji">🎨</span>
-            </div>
-            <span class="skin-name">Misturado</span>
-          </div>
+    <main class="content">
+      <div class="card sync-card">
+        <div class="sync-info">
+          <span class="status-dot"></span>
+          <span class="sync-text" id="syncStatus">Conteúdo Remoto: Sincronizado (v2.0.0)</span>
         </div>
-      </section>
+      </div>
 
-      <!-- Sliders de Ajuste -->
-      <section class="section-panel">
-        <h2 class="section-title">Ajustes Finos</h2>
-        
-        <!-- Slider Quantidade de Mascotes -->
-        <div class="setting-row">
-          <div class="setting-info">
-            <span class="setting-label">Quantidade de Mascotes</span>
-            <span class="setting-value" id="val-count">1</span>
-          </div>
-          <input type="range" id="slider-count" min="1" max="4" step="1" value="1" class="slider-range">
+      <div class="section">
+        <h2>Visual e Skin</h2>
+        <div class="form-group">
+          <label for="mascotSkin">Escolher Mascote / Skin</label>
+          <select id="mascotSkin">
+            <option value="gotinha">💧 Zé Gotinha Clássico</option>
+            <option value="gatinho_laranja">🐱 Gatinho Laranja</option>
+            <option value="robozinho_azul">🤖 Robozinho Azul</option>
+            <option value="mixed">🔀 Misturado (Rotativo)</option>
+          </select>
         </div>
 
-        <!-- Slider Tamanho -->
-        <div class="setting-row">
-          <div class="setting-info">
-            <span class="setting-label">Tamanho</span>
-            <span class="setting-value" id="val-size">64px</span>
+        <div class="form-group">
+          <label for="mascotCount">Quantidade de Mascotes na Tela</label>
+          <div class="count-selector">
+            <button type="button" class="btn-count" data-count="1">1</button>
+            <button type="button" class="btn-count" data-count="2">2</button>
+            <button type="button" class="btn-count" data-count="3">3</button>
+            <button type="button" class="btn-count" data-count="4">4</button>
           </div>
-          <input type="range" id="slider-size" min="40" max="120" step="5" value="64" class="slider-range">
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Ajustes Físicos</h2>
+        <div class="form-group">
+          <div class="label-val">
+            <label for="size">Tamanho</label>
+            <span id="sizeVal">64px</span>
+          </div>
+          <input type="range" id="size" min="40" max="128" step="4" value="64">
         </div>
 
-        <!-- Slider Velocidade -->
-        <div class="setting-row">
-          <div class="setting-info">
-            <span class="setting-label">Velocidade</span>
-            <span class="setting-value" id="val-speed">1.0x</span>
+        <div class="form-group">
+          <div class="label-val">
+            <label for="speedMultiplier">Velocidade</label>
+            <span id="speedVal">1.0x</span>
           </div>
-          <input type="range" id="slider-speed" min="0.5" max="2.5" step="0.1" value="1.0" class="slider-range">
+          <input type="range" id="speedMultiplier" min="0.5" max="2.5" step="0.1" value="1.0">
         </div>
 
-        <!-- Slider Opacidade -->
-        <div class="setting-row">
-          <div class="setting-info">
-            <span class="setting-label">Visibilidade (Opacidade)</span>
-            <span class="setting-value" id="val-opacity">90%</span>
+        <div class="form-group">
+          <div class="label-val">
+            <label for="opacity">Opacidade</label>
+            <span id="opacityVal">90%</span>
           </div>
-          <input type="range" id="slider-opacity" min="0.2" max="1.0" step="0.05" value="0.9" class="slider-range">
+          <input type="range" id="opacity" min="0.3" max="1.0" step="0.05" value="0.9">
         </div>
-      </section>
+      </div>
 
-      <!-- Opções Extras -->
-      <section class="section-panel">
-        <h2 class="section-title">Interações Inteligentes</h2>
-        <div class="checkbox-row">
-          <label class="checkbox-container">
-            Reagir a novas chamadas (Pulo / Alerta)
-            <input type="checkbox" id="checkbox-call-awareness" checked>
-            <span class="checkmark"></span>
+      <div class="section">
+        <h2>Comportamento e Interação</h2>
+        <div class="toggle-row">
+          <span>Reagir a Chamadas de Pacientes</span>
+          <label class="switch sm">
+            <input type="checkbox" id="callAwareness" checked>
+            <span class="slider round"></span>
           </label>
         </div>
-      </section>
-
-      <!-- Botão para acessar o painel -->
-      <button id="btn-access-panel" class="access-panel-btn">
-        🖥️ Acessar o Painel Oficial
-      </button>
+        <div class="toggle-row">
+          <span>Exibir Campanhas de Saúde</span>
+          <label class="switch sm">
+            <input type="checkbox" id="campaignsEnabled" checked>
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
     </main>
 
-    <!-- Rodapé -->
-    <footer class="popup-footer">
-      <div class="footer-credit">Desenvolvido por Guilherme Paicheco Ferreira</div>
-      <div class="footer-version">v1.1.0 • UBS Petrovale - Betim</div>
+    <footer class="footer">
+      <p>Versão 2.0.0 — UBS Betim / SIGSS</p>
     </footer>
   </div>
 

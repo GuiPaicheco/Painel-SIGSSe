@@ -1,0 +1,106 @@
+import { RemoteContentManifest } from '../types';
+
+export const FALLBACK_MANIFEST: RemoteContentManifest = {
+  version: '2.0.0',
+  minExtensionVersion: '2.0.0',
+  updatedAt: new Date().toISOString(),
+  mascots: [
+    {
+      id: 'gotinha',
+      name: 'Zé Gotinha',
+      version: '2.0.0',
+      defaultSkin: 'default',
+      skins: {
+        default: {
+          id: 'default',
+          name: 'Zé Gotinha Clássico',
+          type: 'svg',
+          src: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <path d="M32 4 C32 4 12 28 12 42 A20 20 0 0 0 52 42 C52 28 32 4 32 4 Z" fill="#FFFFFF" stroke="#0288D1" stroke-width="3"/>
+            <circle cx="25" cy="38" r="3" fill="#0288D1"/>
+            <circle cx="39" cy="38" r="3" fill="#0288D1"/>
+            <path d="M26 46 Q32 52 38 46" fill="none" stroke="#E53935" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M22 28 C26 24 38 24 42 28" fill="none" stroke="#0288D1" stroke-width="2" stroke-linecap="round"/>
+          </svg>`,
+          width: 64,
+          height: 64
+        }
+      }
+    },
+    {
+      id: 'gatinho_laranja',
+      name: 'Gatinho Laranja',
+      version: '2.0.0',
+      defaultSkin: 'default',
+      skins: {
+        default: {
+          id: 'default',
+          name: 'Gatinho Laranja',
+          type: 'svg',
+          src: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 22 L24 8 L32 20 L40 8 L48 22 Z" fill="#FB8C00"/>
+            <circle cx="32" cy="36" r="20" fill="#FB8C00"/>
+            <circle cx="24" cy="32" r="3.5" fill="#212121"/>
+            <circle cx="40" cy="32" r="3.5" fill="#212121"/>
+            <polygon points="32,38 29,42 35,42" fill="#E91E63"/>
+            <path d="M12 36 L22 36 M12 40 L22 39 M52 36 L42 36 M52 40 L42 39" stroke="#424242" stroke-width="2"/>
+          </svg>`,
+          width: 64,
+          height: 64
+        }
+      }
+    },
+    {
+      id: 'robozinho_azul',
+      name: 'Robozinho Saúde',
+      version: '2.0.0',
+      defaultSkin: 'default',
+      skins: {
+        default: {
+          id: 'default',
+          name: 'Robozinho Azul',
+          type: 'svg',
+          src: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+            <rect x="16" y="16" width="32" height="28" rx="6" fill="#0288D1" stroke="#01579B" stroke-width="2"/>
+            <rect x="22" y="22" width="20" height="12" rx="3" fill="#E0F7FA"/>
+            <circle cx="27" cy="28" r="2.5" fill="#00C853"/>
+            <circle cx="37" cy="28" r="2.5" fill="#00C853"/>
+            <line x1="32" y1="6" x2="32" y2="16" stroke="#01579B" stroke-width="3"/>
+            <circle cx="32" cy="6" r="4" fill="#FFD600"/>
+            <rect x="20" y="48" width="8" height="10" fill="#0288D1"/>
+            <rect x="36" y="48" width="8" height="10" fill="#0288D1"/>
+          </svg>`,
+          width: 64,
+          height: 64
+        }
+      }
+    }
+  ],
+  campaigns: [
+    {
+      id: 'saude_preventiva',
+      title: 'Saúde Preventiva UBS',
+      priority: 1,
+      messages: [
+        {
+          id: 'msg_01',
+          text: 'Mantenha sua caderneta de vacinação sempre atualizada!',
+          category: 'vaccination',
+          displayDurationSeconds: 7
+        },
+        {
+          id: 'msg_02',
+          text: 'Beba bastante água diariamente para cuidar da sua saúde.',
+          category: 'health_tip',
+          displayDurationSeconds: 6
+        },
+        {
+          id: 'msg_03',
+          text: 'Consulte seu médico da UBS regularmente para exames preventivos.',
+          category: 'prevention',
+          displayDurationSeconds: 8
+        }
+      ]
+    }
+  ]
+};
