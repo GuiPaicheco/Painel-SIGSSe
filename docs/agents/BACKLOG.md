@@ -11,7 +11,7 @@
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **TASK-101** | Investigação do legado e setup da estrutura de documentação persistente | Alta | Nenhum | 👑 Orchestrator / 🏛️ Architect | Documentos `AGENTS.md`, `ARCHITECTURE.md`, `SECURITY.md` criados. | Compilação inicial | 🟢 **Concluído** |
 | **TASK-102** | Definição da tipagem TypeScript estrita e contratos de interface v2.0 | Alta | TASK-101 | 🏛️ Architect | Arquivo `src/types/index.ts` com interfaces completas de mascotes, skins e campanhas. | `npm run check` | 🟢 **Concluído** |
-| **TASK-103** | Implementação do `RemoteContentManager` com Stale-While-Revalidate e Fallback | Alta | TASK-102 | 🌐 Remote Content | Carregamento de manifesto remoto com fallback seguro offline em `src/content/fallbackManifest.ts`. | Testes de schema e fallback | 🟢 **Concluído** |
+| **TASK-103** | Demonstrativo E2E de Atualização Remota com Hot-Reload Visual sem Page Reload | Alta | TASK-102 | 🌐 Remote Content / 💻 Developer | Alteração dinâmica da skin (Zé Gotinha Dourado v2026.08.08.002) e frase no DOM sem reload. | Teste visual E2E & Vitest | 🟢 **Validado E2E** |
 | **TASK-104** | Implementação do Sanitizador Rígido de SVG (`SvgSanitizer`) | Alta | TASK-103 | 🔒 Security | Bloqueio de `<script>`, `onload`, `javascript:` em SVGs remotos baixados. | Teste de SVG malicioso | 🟢 **Concluído** |
 | **TASK-105** | Refatoração de `MascotRenderer.ts` e correção de vazamento de memória | Alta | TASK-102 | 💻 Developer | Remoção de ouvintes de `window` durante a execução do método `destroy()`. | Teste unitário de cleanup | 🟢 **Concluído** |
 | **TASK-106** | Implementação do Motor de Campanhas de Saúde e Balões de Fala | Média | TASK-102 | ✍️ Content / 💻 Developer | Balões de fala com sanitização HTML nativa contra XSS e amostragem de frases. | Testes de XSS e amostragem | 🟢 **Concluído** |
@@ -30,9 +30,9 @@
 
 ```mermaid
 graph TD
-    subgraph Fase Concluída - Base v2.0
+    subgraph Missão 1 Concluída - Pipeline Remoto Validado E2E
         T101[TASK-101: Docs & Audit] --> T102[TASK-102: TypeScript Types]
-        T102 --> T103[TASK-103: Remote Content Manager]
+        T102 --> T103[TASK-103: Remote Content Live Reload]
         T102 --> T105[TASK-105: Mascot Memory Leak Fix]
         T102 --> T106[TASK-106: Campaign Manager]
         T102 --> T107[TASK-107: Glassmorphism Popup]
@@ -50,11 +50,3 @@ graph TD
         T201 & T202 & T203 --> T204[TASK-204: Release v2.0.0 Package]
     end
 ```
-
-### Tarefas que Podem Rodar em Paralelo:
-- **TASK-201** (Remote Content + Developer em `../sigss-worktree-spritesheet`)
-- **TASK-202** (Frontend/UI + Content em `../sigss-worktree-campaigns`)
-- **TASK-203** (QA + Visual QA em `../sigss-worktree-e2e`)
-
-### Tarefa Bloqueada Aguardando Aprovação Humana:
-- **TASK-204**: Criar Tag de Release `v2.0.0`, merge para `main` e push remoto para o GitHub.
