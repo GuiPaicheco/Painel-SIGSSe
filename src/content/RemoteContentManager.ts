@@ -10,7 +10,7 @@ export class RemoteContentManager {
   private isFetching = false;
   private listeners: Set<ContentUpdateListener> = new Set();
 
-  public static readonly QA_REMOTE_URL = 'https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/7ce18f0303f6ed609be138b362a7f5be450b2384/content/manifest.json';
+  public static readonly QA_REMOTE_URL = 'https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/72d094acd648e4cbf3bd5327a8284ef9e238799f/content/manifest.json';
   public static readonly PROD_REMOTE_URL = 'https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/main/content/manifest.json';
 
   private remoteUrl = RemoteContentManager.QA_REMOTE_URL;
@@ -83,9 +83,6 @@ export class RemoteContentManager {
     return this.currentManifest.campaigns || FALLBACK_MANIFEST.campaigns;
   }
 
-  /**
-   * Obtém campanhas ativas e vigentes considerando o horário atual (ou data informada)
-   */
   public getActiveCampaigns(referenceDate: Date = new Date()): CampaignDefinition[] {
     const campaigns = this.getCampaigns();
     if (!campaigns || campaigns.length === 0) return [];
@@ -108,9 +105,6 @@ export class RemoteContentManager {
     });
   }
 
-  /**
-   * Obtém todas as mensagens de campanhas vigentes, filtradas por data e prioridade
-   */
   public getActiveCampaignMessages(referenceDate: Date = new Date()): CampaignMessage[] {
     const activeCampaigns = this.getActiveCampaigns(referenceDate);
     const validMessages: CampaignMessage[] = [];

@@ -665,7 +665,7 @@
     currentManifest = FALLBACK_MANIFEST;
     isFetching = false;
     listeners = /* @__PURE__ */ new Set();
-    static QA_REMOTE_URL = "https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/7ce18f0303f6ed609be138b362a7f5be450b2384/content/manifest.json";
+    static QA_REMOTE_URL = "https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/72d094acd648e4cbf3bd5327a8284ef9e238799f/content/manifest.json";
     static PROD_REMOTE_URL = "https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/main/content/manifest.json";
     remoteUrl = _RemoteContentManager.QA_REMOTE_URL;
     constructor() {
@@ -723,9 +723,6 @@
     getCampaigns() {
       return this.currentManifest.campaigns || FALLBACK_MANIFEST.campaigns;
     }
-    /**
-     * Obtém campanhas ativas e vigentes considerando o horário atual (ou data informada)
-     */
     getActiveCampaigns(referenceDate = /* @__PURE__ */ new Date()) {
       const campaigns = this.getCampaigns();
       if (!campaigns || campaigns.length === 0) return [];
@@ -743,9 +740,6 @@
         return true;
       });
     }
-    /**
-     * Obtém todas as mensagens de campanhas vigentes, filtradas por data e prioridade
-     */
     getActiveCampaignMessages(referenceDate = /* @__PURE__ */ new Date()) {
       const activeCampaigns = this.getActiveCampaigns(referenceDate);
       const validMessages = [];
