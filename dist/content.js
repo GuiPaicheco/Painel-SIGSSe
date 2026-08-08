@@ -675,6 +675,9 @@
       }
       return _RemoteContentManager.instance;
     }
+    setRemoteUrl(url) {
+      this.remoteUrl = url;
+    }
     onUpdate(listener) {
       this.listeners.add(listener);
       return () => this.listeners.delete(listener);
@@ -752,6 +755,25 @@
           return false;
         }
       }
+      return true;
+    }
+    /**
+     * Simulação e aplicação de atualização remota para testes determinísticos E2E
+     */
+    async simulateRemoteUpdate(remoteData) {
+      if (!this.validateManifestSchema(remoteData)) {
+        console.warn("SIGSSe ContentManager: Simula\xE7\xE3o de atualiza\xE7\xE3o rejeitada por schema inv\xE1lido.");
+        return false;
+      }
+      if (remoteData.contentVersion === this.currentManifest.contentVersion) {
+        console.log("SIGSSe ContentManager: Simula\xE7\xE3o de atualiza\xE7\xE3o ignorada (mesma vers\xE3o).");
+        return false;
+      }
+      console.log(`SIGSSe ContentManager: Aplicando atualiza\xE7\xE3o remota simulada (${remoteData.contentVersion})...`);
+      this.sanitizeManifestSkins(remoteData);
+      this.currentManifest = remoteData;
+      await this.saveToLocalCache(remoteData);
+      this.notifyUpdate();
       return true;
     }
     /**
@@ -1115,6 +1137,11 @@
         return;
       }
       console.log("Painel SIGSS+ Mascote v2.0: Inicializando plataforma modular...");
+      window.addEventListener("sigsse_simulate_update", (e) => {
+        if (e && e.detail) {
+          RemoteContentManager.getInstance().simulateRemoteUpdate(e.detail);
+        }
+      });
       await RemoteContentManager.getInstance().init();
       this.remoteUpdateUnsubscribe = RemoteContentManager.getInstance().onUpdate(() => {
         console.log("Painel SIGSS+ Mascote v2.0: Atualiza\xE7\xE3o remota recebida. Aplicando hot-reload visual...");

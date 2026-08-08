@@ -24,6 +24,13 @@ class SIGSSMascotCore {
 
     console.log('Painel SIGSS+ Mascote v2.0: Inicializando plataforma modular...');
 
+    // Escutar simulador local de atualização remota para testes E2E sem reload
+    window.addEventListener('sigsse_simulate_update', (e: any) => {
+      if (e && e.detail) {
+        RemoteContentManager.getInstance().simulateRemoteUpdate(e.detail);
+      }
+    });
+
     // 1. Inicializar o Provedor de Conteúdo Remoto & Cache Local
     await RemoteContentManager.getInstance().init();
 

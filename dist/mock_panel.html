@@ -12,6 +12,7 @@
     <p>Use os botões abaixo para simular ações no painel de chamadas:</p>
     <button id="sim-btn-call">🔔 Simular Nova Chamada</button>
     <button id="sim-btn-clear">🧹 Limpar Chamada Ativa</button>
+    <button id="sim-btn-remote-update" style="background: #7B1FA2; color: #FFF; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; margin-left: 8px;">🚀 Simular Atualização Remota (v2026.08.08.002)</button>
   </div>
 
   <div class="panel-container">
@@ -45,8 +46,9 @@
             <div class="detail-group-row">
               <div class="detail-group">
                 <span class="detail-label">LOCAL / SALA</span>
-                <span class="detail-value highlight-box" id="current-local">-</span>
+                <span class="detail-value" id="current-local">-</span>
               </div>
+              
               <div class="detail-group">
                 <span class="detail-label">PROFISSIONAL</span>
                 <span class="detail-value" id="current-professional">-</span>
@@ -56,9 +58,10 @@
         </div>
       </section>
 
-      <!-- Seção Lateral: Últimas Chamadas -->
+      <!-- Seção Lateral: Histórico de Últimas Chamadas -->
       <aside class="history-section">
-        <h2 class="history-title">ÚLTIMAS CHAMADAS</h2>
+        <div class="history-title">ÚLTIMAS CHAMADAS</div>
+        
         <ul class="history-list" id="history-list">
           <li class="history-item">
             <span class="hist-patient">MARIA AUXILIADORA COSTA</span>
@@ -82,63 +85,58 @@
       </aside>
     </main>
 
-    <!-- Rodapé -->
+    <!-- Rodapé Informativo -->
     <footer class="panel-footer">
       <div class="footer-ticker">
-        <marquee scrollamount="5">Atenção: A vacinação contra a Influenza (Gripe) está disponível de segunda a sexta, das 08h às 17h. Cuide de quem você ama!</marquee>
+        Atenção: A vacinação contra a Gripe e COVID-19 continua em todas as Unidades Básicas de Saúde. Traga seu documento e cartão de vacina.
       </div>
     </footer>
   </div>
 
   <script>
-    // Configurações do simulador
+    function atualizarRelogio() {
+      const agora = new Date();
+      const h = String(agora.getHours()).padStart(2, '0');
+      const m = String(agora.getMinutes()).padStart(2, '0');
+      const s = String(agora.getSeconds()).padStart(2, '0');
+      document.getElementById('hora-painel').textContent = `${h}:${m}:${s}`;
+    }
+    setInterval(atualizarRelogio, 1000);
+    atualizarRelogio();
+
     const patients = [
-      "ANA JULIA SILVEIRA SOUZA",
-      "CARLOS EDUARDO ALMEIDA",
-      "BEATRIZ GONCALVES DIAS",
-      "GABRIEL MONTEIRO REIS",
-      "HELENA DUARTE DE SOUZA",
-      "ROBERTO PEREIRA PINTO",
-      "MARIANA DE CASTRO SILVA",
-      "LUCAS FELIPE RAMOS"
+      'ANA CAROLINA FERREIRA',
+      'CARLOS EDUARDO SANTOS',
+      'BEATRIZ GONCALVES DIAS',
+      'GUILHERME PAICHECO',
+      'HELENA DUARTE DE SOUZA',
+      'JOAO VICTOR ALMEIDA',
+      'LUCAS MENDES ROCHA'
     ];
 
     const locals = [
-      "SALA 01 - VACINA",
-      "SALA 03 - TRIAGEM",
-      "SALA 04 - CURATIVO",
-      "SALA 05 - MEDICO 1",
-      "SALA 06 - MEDICO 2",
-      "SALA 08 - ODONTOLOGIA",
-      "SALA 10 - PEDIATRIA"
+      'SALA 01 (VACINA)',
+      'SALA 02 (TRIAGEM)',
+      'SALA 03 (MEDICO 1)',
+      'SALA 04 (MEDICO 2)',
+      'GUICHE 01 (RECEPCAO)',
+      'CONSULTORIO ODONTO 01'
     ];
 
     const professionals = [
-      "DRA. ALICE PEREIRA (CLINICO)",
-      "DR. THIAGO COSTA (PEDIATRA)",
-      "ENF. CAMILA REIS (TRIAGEM)",
-      "ENF. MARIANA SOUZA (GERAL)",
-      "DR. BRUNO VIEIRA (DENTISTA)"
+      'DRA. VANESSA CARDOSO',
+      'DR. MARCELO ALBUQUERQUE',
+      'ENF. ROBERTA LIMA',
+      'DRA. CAMILA NOLASCO',
+      'DR. THIAGO CASTRO'
     ];
 
-    // Atualização de Relógio do Painel
-    setInterval(() => {
-      const now = new Date();
-      const hh = String(now.getHours()).padStart(2, '0');
-      const mm = String(now.getMinutes()).padStart(2, '0');
-      const ss = String(now.getSeconds()).padStart(2, '0');
-      document.getElementById('hora-painel').textContent = `${hh}:${mm}:${ss}`;
-    }, 1000);
-
-    // Seletores dos elementos
     const patientEl = document.getElementById('current-patient');
     const localEl = document.getElementById('current-local');
     const professionalEl = document.getElementById('current-professional');
     const historyList = document.getElementById('history-list');
 
-    // Botões de Ação
     document.getElementById('sim-btn-call').addEventListener('click', () => {
-      // Se houver chamada ativa atual, adiciona ao histórico
       const lastPatient = patientEl.textContent;
       const lastLocal = localEl.textContent;
       if (lastPatient && lastPatient !== '-') {
@@ -151,23 +149,19 @@
           </div>
         `;
         historyList.insertBefore(li, historyList.firstChild);
-        // Limita o histórico a 5 itens
         if (historyList.children.length > 5) {
           historyList.removeChild(historyList.lastChild);
         }
       }
 
-      // Escolhe novos dados aleatórios
       const randomPatient = patients[Math.floor(Math.random() * patients.length)];
       const randomLocal = locals[Math.floor(Math.random() * locals.length)];
       const randomProfessional = professionals[Math.floor(Math.random() * professionals.length)];
 
-      // Atualiza o painel chamando
       patientEl.textContent = randomPatient;
       localEl.textContent = randomLocal;
       professionalEl.textContent = randomProfessional;
 
-      // Adiciona classe de animação temporária para o chamado
       const callingCard = document.querySelector('.calling-card');
       callingCard.classList.add('new-call-flash');
       setTimeout(() => {
@@ -180,6 +174,58 @@
       localEl.textContent = '-';
       professionalEl.textContent = '-';
     });
+
+    document.getElementById('sim-btn-remote-update').addEventListener('click', () => {
+      const manifestV2 = {
+        contentVersion: '2026.08.08.002',
+        schemaVersion: '1.0',
+        minExtensionVersion: '2.0.0',
+        updatedAt: new Date().toISOString(),
+        mascots: [
+          {
+            id: 'gotinha',
+            name: 'Zé Gotinha Ouro (Versão Remota 002)',
+            version: '2.0.0',
+            defaultSkin: 'default',
+            skins: {
+              default: {
+                id: 'default',
+                name: 'Zé Gotinha Dourado',
+                type: 'svg',
+                src: `<svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M32 4 C32 4 12 28 12 42 A20 20 0 0 0 52 42 C52 28 32 4 32 4 Z" fill="#FFD700" stroke="#FF8F00" stroke-width="3"/>
+                  <circle cx="25" cy="38" r="3" fill="#37474F"/>
+                  <circle cx="39" cy="38" r="3" fill="#37474F"/>
+                  <path d="M26 46 Q32 52 38 46" fill="none" stroke="#D84315" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>`,
+                width: 64,
+                height: 64
+              }
+            }
+          }
+        ],
+        campaigns: [
+          {
+            id: 'campanha_remota_v2',
+            title: 'Campanha de Atualização Remota Validada',
+            priority: 10,
+            messages: [
+              {
+                id: 'msg_v2',
+                text: '🎉 Conteúdo remoto v2026.08.08.002 aplicado com sucesso via Hot-Reload!',
+                category: 'vaccination',
+                displayDurationSeconds: 10
+              }
+            ]
+          }
+        ]
+      };
+
+      console.log('Mock Panel: Disparando evento sigsse_simulate_update com manifesto v2026.08.08.002...');
+      window.dispatchEvent(new CustomEvent('sigsse_simulate_update', { detail: manifestV2 }));
+    });
   </script>
+  <!-- Injeta content.js para inicialização nativa no simulador mock sem depender de extensão pré-carregada -->
+  <script src="content.js"></script>
 </body>
 </html>

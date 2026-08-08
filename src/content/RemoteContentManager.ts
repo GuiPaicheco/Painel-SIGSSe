@@ -23,6 +23,10 @@ export class RemoteContentManager {
     return RemoteContentManager.instance;
   }
 
+  public setRemoteUrl(url: string): void {
+    this.remoteUrl = url;
+  }
+
   public onUpdate(listener: ContentUpdateListener): () => void {
     this.listeners.add(listener);
     return () => this.listeners.delete(listener);
@@ -54,7 +58,6 @@ export class RemoteContentManager {
       await this.saveToLocalCache(FALLBACK_MANIFEST);
     }
 
-    // Trigger de sincronização remota assíncrona
     this.checkRemoteUpdateInBackground().catch(err => {
       console.warn('SIGSSe ContentManager: Falha na verificação de atualização remota:', err);
     });
@@ -103,7 +106,6 @@ export class RemoteContentManager {
     if (!data.schemaVersion || typeof data.schemaVersion !== 'string') return false;
     if (!Array.isArray(data.mascots) || data.mascots.length === 0) return false;
 
-    // Validar cada mascote e suas skins
     for (const mascot of data.mascots) {
       if (!mascot || typeof mascot !== 'object' || !mascot.id || typeof mascot.id !== 'string') {
         return false;
@@ -116,6 +118,28 @@ export class RemoteContentManager {
       }
     }
 
+    return true;
+  }
+
+  /**
+   * Simulação e aplicação de atualização remota para testes determinísticos E2E
+   */
+  public async simulateRemoteUpdate(remoteData: any): Promise<boolean> {
+    if (!this.validateManifestSchema(remoteData)) {
+      console.warn('SIGSSe ContentManager: Simulação de atualização rejeitada por schema inválido.');
+      return false;
+    }
+
+    if (remoteData.contentVersion === this.currentManifest.contentVersion) {
+      console.log('SIGSSe ContentManager: Simulação de atualização ignorada (mesma versão).');
+      return false;
+    }
+
+    console.log(`SIGSSe ContentManager: Aplicando atualização remota simulada (${remoteData.contentVersion})...`);
+    this.sanitizeManifestSkins(remoteData);
+    this.currentManifest = remoteData;
+    await this.saveToLocalCache(remoteData);
+    this.notifyUpdate();
     return true;
   }
 
@@ -176,7 +200,6 @@ export class RemoteContentManager {
 
       const remoteData: any = await response.json();
       
-      // Validação estrita do schema baixado
       if (this.validateManifestSchema(remoteData)) {
         if (remoteData.contentVersion !== this.currentManifest.contentVersion) {
           console.log(`SIGSSe ContentManager: Nova versão de conteúdo remota recebida (${remoteData.contentVersion}). Atualizando cache e notificando...`);
