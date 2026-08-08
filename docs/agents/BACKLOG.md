@@ -20,9 +20,10 @@
 | **TASK-109** | Validação no Painel Simulado Local (`mock/mock_panel.html`) | Alta | TASK-105, 107 | 👁️ Visual QA | Funcionamento sem erros no console no mock com mutação de chamadas. | Teste visual Chromium | 🟢 **Concluído** |
 | **TASK-110** | Integração e Validação Read-Only no Painel SIGSS Real da UBS | Alta | TASK-109 | 🏥 SIGSS Integration / 👁️ Visual QA | Leitura passiva do DOM do painel real sem alteração ou mutação de dados. | Teste no SIGSS real | 🟢 **Concluído** |
 | **TASK-205** | Plataforma de Autoria e Distribuição Declarativa de Conteúdo (`Content Authoring System`) | Alta | TASK-103 | 🏛️ Architect / ✍️ Content / 🌐 Remote Content | Estrutura modular `content/` (mascots, messages, campaigns), script `compile-content.js`, schemas e filtragem por data (`startDate`/`endDate`). | Vitest 18/18 & E2E Visual | 🟢 **Concluído** |
-| **TASK-201** | Suporte a Spritesheets PNG e Animações Frame-by-Frame para Skins Complexas | Média | TASK-205 | 🌐 Remote Content / 💻 Developer | Suporte no `MascotRenderer` a atlas de frames PNG além do formato SVG. | Testes de animação PNG | 🟡 **Aguardando Início** |
-| **TASK-202** | Painel Administrativo de Visualização de Campanhas e Agendamento por Data | Média | TASK-205 | 🎨 Frontend/UI / ✍️ Content | Filtro de mensagens ativas por período (`startDate` / `endDate`) e categoria de saúde. | Testes de data/hora | 🟡 **Aguardando Início** |
-| **TASK-203** | Implementação da Suíte E2E Automatizada com Playwright Headless | Alta | TASK-205 | 🧪 QA / 👁️ Visual QA | Script automatizado de regressão visual integrado ao fluxo de build. | `npm run test:e2e` | 🟡 **Aguardando Início** |
+| **TASK-206** | Validação E2E do Content Authoring System com Conteúdo Declarativo Remoto | Alta | TASK-205 | 🌐 Remote Content / 👁️ Visual QA | Adição de nova skin (Emerald), mensagem e campanha usando 100% arquivos declarativos de `content/` sem alterar TypeScript. | E2E Visual & GitHub Raw | 🟢 **Validado E2E** |
+| **TASK-201** | Suporte a Spritesheets PNG e Animações Frame-by-Frame para Skins Complexas | Média | TASK-206 | 🌐 Remote Content / 💻 Developer | Suporte no `MascotRenderer` a atlas de frames PNG além do formato SVG. | Testes de animação PNG | 🟡 **Aguardando Início** |
+| **TASK-202** | Painel Administrativo de Visualização de Campanhas e Agendamento por Data | Média | TASK-206 | 🎨 Frontend/UI / ✍️ Content | Filtro de mensagens ativas por período (`startDate` / `endDate`) e categoria de saúde. | Testes de data/hora | 🟡 **Aguardando Início** |
+| **TASK-203** | Implementação da Suíte E2E Automatizada com Playwright Headless | Alta | TASK-206 | 🧪 QA / 👁️ Visual QA | Script automatizado de regressão visual integrado ao fluxo de build. | `npm run test:e2e` | 🟡 **Aguardando Início** |
 | **TASK-204** | Preparação do Pacote de Release v2.0.0 (Tag Semântica + Changelog) | Restrita | TASK-203 | 🚀 Git/Release | Tag Git `v2.0.0` e arquivo `CHANGELOG.md` prontos para revisão do usuário. | Audit de release | 🔴 **Exige Aprovação Humana** |
 
 ---
@@ -42,12 +43,13 @@ graph TD
         T105 & T107 --> T109[TASK-109: Mock Visual QA]
         T108 & T109 --> T110[TASK-110: SIGSS Real Read-Only QA]
         T110 --> T205[TASK-205: Content Authoring System]
+        T205 --> T206[TASK-206: Content Authoring E2E]
     end
 
     subgraph Próxima Fase (Desenvolvimento Paralelo)
-        T205 --> T201[TASK-201: PNG Spritesheet Support]
-        T205 --> T202[TASK-202: Campaign Date Scheduler]
-        T205 --> T203[TASK-203: Playwright E2E Suite]
+        T206 --> T201[TASK-201: PNG Spritesheet Support]
+        T206 --> T202[TASK-202: Campaign Date Scheduler]
+        T206 --> T203[TASK-203: Playwright E2E Suite]
         
         T201 & T202 & T203 --> T204[TASK-204: Release v2.0.0 Package]
     end
