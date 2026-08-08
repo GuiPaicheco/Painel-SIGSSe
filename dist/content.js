@@ -665,8 +665,8 @@
     currentManifest = FALLBACK_MANIFEST;
     isFetching = false;
     listeners = /* @__PURE__ */ new Set();
-    // URL Padrão de QA / Desenvolvimento (Branch de Feature)
-    static QA_REMOTE_URL = "https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/feature/architecture-v2/content/manifest.json";
+    // URL Padrão de QA / Desenvolvimento (Branch de Feature / Commit SHA 7ce18f0)
+    static QA_REMOTE_URL = "https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/7ce18f0303f6ed609be138b362a7f5be450b2384/content/manifest.json";
     // URL Padrão de Produção (Branch Main)
     static PROD_REMOTE_URL = "https://raw.githubusercontent.com/GuiPaicheco/Painel-SIGSSe/main/content/manifest.json";
     remoteUrl = _RemoteContentManager.QA_REMOTE_URL;
@@ -701,7 +701,7 @@
     /**
      * Inicializa o gerenciador com Stale-While-Revalidate:
      * 1. Carrega do cache local/fallback imediatamente.
-     * 2. Tenta atualização remota real em background via fetch HTTP.
+     * 2. Tenta atualização remota real em background via fetch HTTP no GitHub Raw.
      */
     async init() {
       const cached = await this.loadFromLocalCache();
@@ -829,7 +829,7 @@
       if (this.isFetching) return false;
       this.isFetching = true;
       try {
-        console.log(`SIGSSe ContentManager: Verificando manifesto remoto real em: ${this.remoteUrl}`);
+        console.log(`SIGSSe ContentManager: Verificando manifesto remoto real no GitHub Raw: ${this.remoteUrl}`);
         const response = await fetch(this.remoteUrl, { cache: "no-cache" });
         if (!response.ok) {
           throw new Error(`HTTP Error ${response.status}`);
