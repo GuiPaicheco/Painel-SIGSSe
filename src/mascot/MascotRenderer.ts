@@ -1,14 +1,16 @@
 import { MascotEngine } from './MascotEngine';
 import { RemoteContentManager } from '../content/RemoteContentManager';
 import { CampaignManager } from '../campaign/CampaignManager';
+import { MascotAnimationDefinition } from '../types';
 
 export class MascotRenderer {
   private engine: MascotEngine;
   private container: HTMLElement;
   private mascotEl: HTMLElement;
   private skinId: string = 'gotinha';
+  private currentRenderMode: 'svg' | 'spritesheet' = 'svg';
+  private currentAnimationId: string = '';
 
-  // Handlers salvos para remoção limpa no destroy (Memory Leak Prevention)
   private mouseMoveHandler: ((e: MouseEvent) => void) | null = null;
   private mouseUpHandler: (() => void) | null = null;
   private clickHandler: (() => void) | null = null;
@@ -32,8 +34,14 @@ export class MascotRenderer {
 
     this.mascotEl = document.createElement('div');
     this.mascotEl.className = 'sigsse-mascot-sprite';
-    this.container.appendChild(this.mascotEl);
+    Object.assign(this.mascotEl.style, {
+      width: '100%',
+      height: '100%',
+      backgroundRepeat: 'no-repeat',
+      backgroundPosition: '0px 0px'
+    });
 
+    this.container.appendChild(this.mascotEl);
     document.body.appendChild(this.container);
 
     this.setupInteractions();
@@ -45,6 +53,12 @@ export class MascotRenderer {
   }
 
   public updateSkinVisual(): void {
+    this.currentRenderMode = 'svg';
+    this.currentAnimationId = '';
+    this.renderSvgVisual();
+  }
+
+  private renderSvgVisual(): void {
     const remoteManager = RemoteContentManager.getInstance();
     const mascotDef = remoteManager.getMascotById(this.skinId);
 
@@ -56,6 +70,7 @@ export class MascotRenderer {
       svgContent = defaultMascot?.skins?.default?.src || `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="#0288D1"/></svg>`;
     }
 
+    this.mascotEl.style.backgroundImage = 'none';
     this.mascotEl.innerHTML = svgContent;
     
     const svg = this.mascotEl.querySelector('svg');
@@ -67,7 +82,7 @@ export class MascotRenderer {
   }
 
   public render(): void {
-    const { x, y, facingRight } = this.engine;
+    const { x, y, facingRight, state } = this.engine;
     const config = this.engine.getConfig();
 
     const scaleX = facingRight ? 1 : -1;
@@ -76,8 +91,63 @@ export class MascotRenderer {
     this.container.style.width = `${config.size}px`;
     this.container.style.height = `${config.size}px`;
 
-    if (this.engine.state === 'SPEAKING') {
+    // Verificar se existe uma animação por Spritesheet declarativa associada ao estado atual da FSM
+    const remoteManager = RemoteContentManager.getInstance();
+    const mascotDef = remoteManager.getMascotById(this.skinId);
+    
+    let activeAnim: MascotAnimationDefinition | null = null;
+    if (mascotDef && mascotDef.animations) {
+      const anims = Object.values(mascotDef.animations) as MascotAnimationDefinition[];
+      anims.forEach(anim => {
+        if (anim && anim.state === state && anim.src) {
+          activeAnim = anim;
+        }
+      });
+    }
+
+    if (activeAnim && (activeAnim as MascotAnimationDefinition).src) {
+      this.renderSpritesheetFrame(activeAnim as MascotAnimationDefinition);
+    } else {
+      if (this.currentRenderMode === 'spritesheet') {
+        this.currentRenderMode = 'svg';
+        this.renderSvgVisual();
+      }
+    }
+
+    if (state === 'SPEAKING') {
       this.triggerCampaignSpeech();
+    }
+  }
+
+  private renderSpritesheetFrame(anim: MascotAnimationDefinition): void {
+    try {
+      this.currentRenderMode = 'spritesheet';
+      
+      const now = Date.now();
+      const frameCount = anim.frameCount || 1;
+      const fps = anim.fps || 10;
+      const frameIndex = Math.floor((now * fps) / 1000) % frameCount;
+
+      const cols = anim.columns || frameCount;
+      const col = frameIndex % cols;
+      const row = Math.floor(frameIndex / cols);
+
+      const offsetX = -(col * anim.frameWidth);
+      const offsetY = -(row * anim.frameHeight);
+
+      if (this.currentAnimationId !== anim.id) {
+        this.currentAnimationId = anim.id;
+        this.mascotEl.innerHTML = '';
+        this.mascotEl.style.backgroundImage = `url("${anim.src}")`;
+        this.mascotEl.style.backgroundSize = `${cols * 100}% auto`;
+      }
+
+      this.mascotEl.style.backgroundPosition = `${offsetX}px ${offsetY}px`;
+    } catch (e) {
+      // Fallback gracioso para SVG em caso de falha no renderizador de spritesheet
+      console.warn('MascotRenderer: Falha ao renderizar quadro de spritesheet. Aplicando fallback SVG.', e);
+      this.currentRenderMode = 'svg';
+      this.renderSvgVisual();
     }
   }
 
@@ -127,7 +197,6 @@ export class MascotRenderer {
   }
 
   public destroy(): void {
-    // Remoção estrita de todos os event listeners globais e locais
     if (this.mouseMoveHandler) {
       window.removeEventListener('mousemove', this.mouseMoveHandler);
       this.mouseMoveHandler = null;

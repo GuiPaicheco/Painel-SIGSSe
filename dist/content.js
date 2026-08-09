@@ -970,7 +970,8 @@
     container;
     mascotEl;
     skinId = "gotinha";
-    // Handlers salvos para remoção limpa no destroy (Memory Leak Prevention)
+    currentRenderMode = "svg";
+    currentAnimationId = "";
     mouseMoveHandler = null;
     mouseUpHandler = null;
     clickHandler = null;
@@ -991,6 +992,12 @@
       });
       this.mascotEl = document.createElement("div");
       this.mascotEl.className = "sigsse-mascot-sprite";
+      Object.assign(this.mascotEl.style, {
+        width: "100%",
+        height: "100%",
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "0px 0px"
+      });
       this.container.appendChild(this.mascotEl);
       document.body.appendChild(this.container);
       this.setupInteractions();
@@ -1000,6 +1007,11 @@
       this.updateSkinVisual();
     }
     updateSkinVisual() {
+      this.currentRenderMode = "svg";
+      this.currentAnimationId = "";
+      this.renderSvgVisual();
+    }
+    renderSvgVisual() {
       const remoteManager = RemoteContentManager.getInstance();
       const mascotDef = remoteManager.getMascotById(this.skinId);
       let svgContent = "";
@@ -1009,6 +1021,7 @@
         const defaultMascot = remoteManager.getMascotById("gotinha");
         svgContent = defaultMascot?.skins?.default?.src || `<svg viewBox="0 0 64 64"><circle cx="32" cy="32" r="28" fill="#0288D1"/></svg>`;
       }
+      this.mascotEl.style.backgroundImage = "none";
       this.mascotEl.innerHTML = svgContent;
       const svg = this.mascotEl.querySelector("svg");
       if (svg) {
@@ -1018,15 +1031,59 @@
       }
     }
     render() {
-      const { x, y, facingRight } = this.engine;
+      const { x, y, facingRight, state } = this.engine;
       const config = this.engine.getConfig();
       const scaleX = facingRight ? 1 : -1;
       this.container.style.transform = `translate3d(${x}px, ${y}px, 0px) scaleX(${scaleX})`;
       this.container.style.opacity = `${config.opacity}`;
       this.container.style.width = `${config.size}px`;
       this.container.style.height = `${config.size}px`;
-      if (this.engine.state === "SPEAKING") {
+      const remoteManager = RemoteContentManager.getInstance();
+      const mascotDef = remoteManager.getMascotById(this.skinId);
+      let activeAnim = null;
+      if (mascotDef && mascotDef.animations) {
+        const anims = Object.values(mascotDef.animations);
+        anims.forEach((anim) => {
+          if (anim && anim.state === state && anim.src) {
+            activeAnim = anim;
+          }
+        });
+      }
+      if (activeAnim && activeAnim.src) {
+        this.renderSpritesheetFrame(activeAnim);
+      } else {
+        if (this.currentRenderMode === "spritesheet") {
+          this.currentRenderMode = "svg";
+          this.renderSvgVisual();
+        }
+      }
+      if (state === "SPEAKING") {
         this.triggerCampaignSpeech();
+      }
+    }
+    renderSpritesheetFrame(anim) {
+      try {
+        this.currentRenderMode = "spritesheet";
+        const now = Date.now();
+        const frameCount = anim.frameCount || 1;
+        const fps = anim.fps || 10;
+        const frameIndex = Math.floor(now * fps / 1e3) % frameCount;
+        const cols = anim.columns || frameCount;
+        const col = frameIndex % cols;
+        const row = Math.floor(frameIndex / cols);
+        const offsetX = -(col * anim.frameWidth);
+        const offsetY = -(row * anim.frameHeight);
+        if (this.currentAnimationId !== anim.id) {
+          this.currentAnimationId = anim.id;
+          this.mascotEl.innerHTML = "";
+          this.mascotEl.style.backgroundImage = `url("${anim.src}")`;
+          this.mascotEl.style.backgroundSize = `${cols * 100}% auto`;
+        }
+        this.mascotEl.style.backgroundPosition = `${offsetX}px ${offsetY}px`;
+      } catch (e) {
+        console.warn("MascotRenderer: Falha ao renderizar quadro de spritesheet. Aplicando fallback SVG.", e);
+        this.currentRenderMode = "svg";
+        this.renderSvgVisual();
       }
     }
     triggerCampaignSpeech() {

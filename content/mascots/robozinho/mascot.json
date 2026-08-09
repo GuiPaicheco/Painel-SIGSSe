@@ -12,5 +12,21 @@
       "width": 64,
       "height": 64
     }
+  },
+  "animations": {
+    "dance": {
+      "id": "dance",
+      "name": "Robozinho Dança Spritesheet E2E",
+      "type": "spritesheet",
+      "asset": "animations/dance-e2e/spritesheet.png",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frameCount": 4,
+      "columns": 4,
+      "rows": 1,
+      "fps": 12,
+      "loop": true,
+      "state": "RUN"
+    }
   }
 }

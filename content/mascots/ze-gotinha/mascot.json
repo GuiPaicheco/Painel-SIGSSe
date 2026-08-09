@@ -28,5 +28,21 @@
       "width": 64,
       "height": 64
     }
+  },
+  "animations": {
+    "celebrate": {
+      "id": "celebrate",
+      "name": "Zé Gotinha Celebração Spritesheet E2E",
+      "type": "spritesheet",
+      "asset": "animations/celebrate-e2e/spritesheet.png",
+      "frameWidth": 64,
+      "frameHeight": 64,
+      "frameCount": 4,
+      "columns": 4,
+      "rows": 1,
+      "fps": 8,
+      "loop": true,
+      "state": "CELEBRATE"
+    }
   }
 }

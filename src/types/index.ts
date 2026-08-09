@@ -2,6 +2,8 @@
  * Tipos e Interfaces Fundamentais — Painel SIGSSe 2.0
  */
 
+export type MascotState = 'IDLE' | 'WALK' | 'RUN' | 'JUMP' | 'FALL' | 'CLIMB' | 'SLEEP' | 'CELEBRATE' | 'TRIP' | 'STRETCH' | 'SPEAKING' | 'DRAGGED';
+
 export type MascotSkinType = 'gotinha' | 'robozinho_azul' | 'robozinho_rosa' | 'robozinho_verde' | 'gatinho_laranja' | 'gatinho_cinza' | 'gatinho_preto' | string;
 
 export interface MascotSettings {
@@ -21,16 +23,34 @@ export interface MascotSkinDefinition {
   id: string;
   name: string;
   type: 'svg' | 'spritesheet' | 'image';
-  src?: string; // SVG sanitizado ou URL
-  asset?: string; // Caminho relativo para arquivo vetorial estático
+  src?: string; // SVG sanitizado ou DataURI/URL do PNG
+  asset?: string; // Caminho relativo para o arquivo vetorial ou imagem estática
   width: number;
   height: number;
+  // Propriedades para Spritesheet PNG
+  frameWidth?: number;
+  frameHeight?: number;
+  frameCount?: number;
+  columns?: number;
+  rows?: number;
+  fps?: number;
+  loop?: boolean;
 }
 
 export interface MascotAnimationDefinition {
-  frames: number[];
+  id: string;
+  name: string;
+  type: 'spritesheet' | 'css_keyframe';
+  src?: string;
+  asset?: string;
+  frameWidth: number;
+  frameHeight: number;
+  frameCount: number;
+  columns?: number;
+  rows?: number;
   fps: number;
   loop: boolean;
+  state?: MascotState;
 }
 
 export interface MascotDefinition {

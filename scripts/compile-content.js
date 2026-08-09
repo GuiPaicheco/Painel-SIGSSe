@@ -4,7 +4,7 @@ const path = require('path');
 /**
  * Script de Compilação e Validação de Conteúdo — Painel SIGSSe 2.0
  * Varre a estrutura modular de content/ (mascots, messages, campaigns)
- * Injete SVGs estáticos, valida integridade referencial e gera content/manifest.json.
+ * Processa SVGs e Spritesheets PNG, valida integridade referencial e gera content/manifest.json.
  */
 
 const CONTENT_DIR = path.join(__dirname, '../content');
@@ -12,6 +12,10 @@ const MASCOTS_DIR = path.join(CONTENT_DIR, 'mascots');
 const MESSAGES_DIR = path.join(CONTENT_DIR, 'messages');
 const CAMPAIGNS_DIR = path.join(CONTENT_DIR, 'campaigns');
 const OUTPUT_MANIFEST = path.join(CONTENT_DIR, 'manifest.json');
+
+const VALID_STATES = [
+  'IDLE', 'WALK', 'RUN', 'JUMP', 'FALL', 'CLIMB', 'SLEEP', 'CELEBRATE', 'TRIP', 'STRETCH', 'SPEAKING', 'DRAGGED'
+];
 
 function sanitizeSvg(svgContent) {
   if (!svgContent) return '';
@@ -21,9 +25,6 @@ function sanitizeSvg(svgContent) {
     .replace(/javascript:/gi, '');
 }
 
-/**
- * Calcula a versão de conteúdo de forma incremental e monotônica (YYYY.MM.DD.NNN)
- */
 function calculateNextContentVersion(now = new Date(), manifestPath = OUTPUT_MANIFEST) {
   const year = now.getFullYear();
   const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -48,7 +49,6 @@ function calculateNextContentVersion(now = new Date(), manifestPath = OUTPUT_MAN
         }
       }
     } catch (e) {
-      // Se o manifesto no disco estiver corrompido, inicia em 001
       sequenceNumber = 1;
     }
   }
@@ -58,13 +58,13 @@ function calculateNextContentVersion(now = new Date(), manifestPath = OUTPUT_MAN
 }
 
 function compileContent(customDate = new Date()) {
-  console.log('📦 Compilando plataforma de conteúdo declarativo...');
+  console.log('📦 Compilando plataforma de conteúdo declarativo (SVG + PNG Spritesheets)...');
 
   const compiledMascots = [];
   const compiledCampaigns = [];
   const mascotIds = new Set();
 
-  // 1. Processar Mascotes e Skins
+  // 1. Processar Mascotes, Skins e Animações por Spritesheet
   if (fs.existsSync(MASCOTS_DIR)) {
     const mascotFolders = fs.readdirSync(MASCOTS_DIR);
     mascotFolders.forEach(folder => {
@@ -87,6 +87,7 @@ function compileContent(customDate = new Date()) {
         throw new Error(`[Content Compiler] Skin default '${mascotData.defaultSkin}' não existe no mascote '${mascotData.id}'`);
       }
 
+      // Processar Skins
       const processedSkins = {};
       Object.keys(mascotData.skins).forEach(skinKey => {
         const skin = mascotData.skins[skinKey];
@@ -97,11 +98,65 @@ function compileContent(customDate = new Date()) {
           }
           const rawSvg = fs.readFileSync(svgFilePath, 'utf-8');
           skin.src = sanitizeSvg(rawSvg);
+        } else if (skin.type === 'spritesheet' && skin.asset) {
+          const pngFilePath = path.join(mascotPath, skin.asset);
+          if (!fs.existsSync(pngFilePath)) {
+            throw new Error(`[Content Compiler] Arquivo PNG de spritesheet de skin não encontrado: ${pngFilePath}`);
+          }
+          const base64Png = fs.readFileSync(pngFilePath).toString('base64');
+          skin.src = `data:image/png;base64,${base64Png}`;
         }
         processedSkins[skinKey] = skin;
       });
 
       mascotData.skins = processedSkins;
+
+      // Processar Animações por Spritesheet se existirem
+      if (mascotData.animations && typeof mascotData.animations === 'object') {
+        const processedAnimations = {};
+        Object.keys(mascotData.animations).forEach(animKey => {
+          const anim = mascotData.animations[animKey];
+          
+          if (!anim.frameWidth || anim.frameWidth <= 0) {
+            throw new Error(`[Content Compiler] frameWidth inválido na animação '${animKey}' do mascote '${mascotData.id}'`);
+          }
+          if (!anim.frameHeight || anim.frameHeight <= 0) {
+            throw new Error(`[Content Compiler] frameHeight inválido na animação '${animKey}' do mascote '${mascotData.id}'`);
+          }
+          if (!anim.frameCount || anim.frameCount <= 0) {
+            throw new Error(`[Content Compiler] frameCount inválido na animação '${animKey}' do mascote '${mascotData.id}'`);
+          }
+          if (!anim.fps || anim.fps <= 0) {
+            throw new Error(`[Content Compiler] fps inválido na animação '${animKey}' do mascote '${mascotData.id}'`);
+          }
+          if (anim.state && !VALID_STATES.includes(anim.state)) {
+            throw new Error(`[Content Compiler] Estado FSM inválido '${anim.state}' na animação '${animKey}'`);
+          }
+
+          if (anim.asset) {
+            const animAssetPath = path.join(mascotPath, anim.asset);
+            if (!fs.existsSync(animAssetPath)) {
+              throw new Error(`[Content Compiler] Arquivo de animação PNG não encontrado: ${animAssetPath}`);
+            }
+            const ext = path.extname(animAssetPath).toLowerCase();
+            if (!['.png', '.webp', '.jpg', '.jpeg', '.svg'].includes(ext)) {
+              throw new Error(`[Content Compiler] Extensão de animação não permitida '${ext}' em: ${animAssetPath}`);
+            }
+            if (ext === '.svg') {
+              const rawSvg = fs.readFileSync(animAssetPath, 'utf-8');
+              anim.src = sanitizeSvg(rawSvg);
+            } else {
+              const base64Content = fs.readFileSync(animAssetPath).toString('base64');
+              const mime = ext === '.webp' ? 'image/webp' : 'image/png';
+              anim.src = `data:${mime};base64,${base64Content}`;
+            }
+          }
+
+          processedAnimations[animKey] = anim;
+        });
+        mascotData.animations = processedAnimations;
+      }
+
       compiledMascots.push(mascotData);
     });
   }
@@ -117,7 +172,7 @@ function compileContent(customDate = new Date()) {
     });
   }
 
-  // 3. Processar Mensagens Avulsas como Campanha Geral
+  // 3. Processar Mensagens Avulsas
   if (fs.existsSync(MESSAGES_DIR)) {
     const messageFiles = fs.readdirSync(MESSAGES_DIR);
     const generalMessages = [];

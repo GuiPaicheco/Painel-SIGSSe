@@ -1,8 +1,8 @@
 {
-  "contentVersion": "2026.08.08.006",
+  "contentVersion": "2026.08.09.005",
   "schemaVersion": "1.0",
   "minExtensionVersion": "2.0.0",
-  "updatedAt": "2026-08-08T23:45:08.106Z",
+  "updatedAt": "2026-08-09T04:10:40.127Z",
   "mascots": [
     {
       "id": "gatinho_laranja",
@@ -35,6 +35,23 @@
           "width": 64,
           "height": 64,
           "src": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\">\n  <rect x=\"16\" y=\"16\" width=\"32\" height=\"28\" rx=\"6\" fill=\"#0288D1\" stroke=\"#01579B\" stroke-width=\"2\"/>\n  <rect x=\"22\" y=\"22\" width=\"20\" height=\"12\" rx=\"3\" fill=\"#E0F7FA\"/>\n  <circle cx=\"27\" cy=\"28\" r=\"2.5\" fill=\"#00C853\"/>\n  <circle cx=\"37\" cy=\"28\" r=\"2.5\" fill=\"#00C853\"/>\n  <line x1=\"32\" y1=\"6\" x2=\"32\" y2=\"16\" stroke=\"#01579B\" stroke-width=\"3\"/>\n  <circle cx=\"32\" cy=\"6\" r=\"4\" fill=\"#FFD600\"/>\n  <rect x=\"20\" y=\"48\" width=\"8\" height=\"10\" fill=\"#0288D1\"/>\n  <rect x=\"36\" y=\"48\" width=\"8\" height=\"10\" fill=\"#0288D1\"/>\n</svg>\n"
+        }
+      },
+      "animations": {
+        "dance": {
+          "id": "dance",
+          "name": "Robozinho Dança Spritesheet E2E",
+          "type": "spritesheet",
+          "asset": "animations/dance-e2e/spritesheet.png",
+          "frameWidth": 64,
+          "frameHeight": 64,
+          "frameCount": 4,
+          "columns": 4,
+          "rows": 1,
+          "fps": 12,
+          "loop": true,
+          "state": "RUN",
+          "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAABACAIAAAB6Pz7pAAABN0lEQVR4nO3TMRHCQBRF0VihwkMaNEQFjqgQkYZBWAykSREUhDt73lwBf2f2TDezgTddfYDZlTsAvO9rrvMznvM31/n+x/LJ9fOPXlsvAAAAAAAAAAAAAAByAQAAAAAAAAAAAACQCwAAAAAAAAAAAACAXAAAAAAAAAAAAAAA9AIAAAAAAAAAAAAAIBcAAAAAAAAAAAAAALkAAAAAAAAAAAAAAMgFAAAAAAAAAAAAAEAvAAAAAAAAAAAAAAByAQAAAAAAAAAAAACQCwAAAAAAAAAAAACAXAAAAAAAAAAAAAAA9AIAAAAAAAAAAAAAIBcAAAAAAAAAAAAAALkAAAAAAAAAAAAAAMgFAAAAAAAAAAAAAEAvAAAAAAAAAAAAAAByAQAAAAAAAAAAAACQC4A/AmA25gCwobcDjd6LvrHoLyAAAAAASUVORK5CYII="
         }
       }
     },
@@ -70,6 +87,23 @@
           "width": 64,
           "height": 64,
           "src": "<svg viewBox=\"0 0 64 64\" xmlns=\"http://www.w3.org/2000/svg\">\n  <path d=\"M32 4 C32 4 12 28 12 42 A20 20 0 0 0 52 42 C52 28 32 4 32 4 Z\" fill=\"#00E676\" stroke=\"#00C853\" stroke-width=\"3\"/>\n  <circle cx=\"25\" cy=\"38\" r=\"3\" fill=\"#1B5E20\"/>\n  <circle cx=\"39\" cy=\"38\" r=\"3\" fill=\"#1B5E20\"/>\n  <path d=\"M26 46 Q32 52 38 46\" fill=\"none\" stroke=\"#1B5E20\" stroke-width=\"2.5\" stroke-linecap=\"round\"/>\n</svg>\n"
+        }
+      },
+      "animations": {
+        "celebrate": {
+          "id": "celebrate",
+          "name": "Zé Gotinha Celebração Spritesheet E2E",
+          "type": "spritesheet",
+          "asset": "animations/celebrate-e2e/spritesheet.png",
+          "frameWidth": 64,
+          "frameHeight": 64,
+          "frameCount": 4,
+          "columns": 4,
+          "rows": 1,
+          "fps": 8,
+          "loop": true,
+          "state": "CELEBRATE",
+          "src": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAQAAAABACAIAAAB6Pz7pAAABQUlEQVR4nO3TwQkCQRBFwQHzEIzNHMzJiDYDwbt3vXjYDJrH1OcFMANd62a28db0A8wm9wewXo9c5298j5Xr/P7L85Pr/P739Z4LAAAAAAAAAAAAAID5gwagFQAAAAAAAAAAAAAAuQAAAAAAAAAAAAAAmD9oAFoBAAAAAAAAAAAAAJALAAAAAAAAAAAAAID5gwagFQAAAAAAAAAAAAAAuQAAAAAAAAAAAAAAmD9oAFoBAAAAAAAAAAAAAJALAAAAAAAAAAAAAID5gwagFQAAAAAAAAAAAAAAuQAAAAAAAAAAAAAAmD9oAFoBAAAAAAAAAAAAAJALAAAAAAAAAAAAAID5gwagFQAAAAAAAAAAAAAAuQAAAAAAAAAAAAAAmD9oAFoBAAAAAAAAAAAAAJALAAAAAAAAAAAAYHcAZnsOANt6P9u7sEfsZ46CAAAAAElFTkSuQmCC"
         }
       }
     }
