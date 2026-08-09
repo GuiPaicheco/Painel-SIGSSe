@@ -12,95 +12,165 @@
       <div class="logo-title">
         <span class="logo-icon">💧</span>
         <div>
-          <h1>Painel SIGSSe</h1>
+          <h1>Painel SIGSSe 2.0</h1>
           <p class="subtitle">Mascotes & Campanhas de Saúde</p>
         </div>
       </div>
-      <label class="switch">
+      <label class="switch" title="Ativar/Desativar Mascotes">
         <input type="checkbox" id="mascotEnabled" checked>
         <span class="slider round"></span>
       </label>
     </header>
 
+    <!-- Navegação por Abas -->
+    <nav class="nav-tabs">
+      <button type="button" class="tab-btn active" id="tabBtnSettings">⚙️ Ajustes</button>
+      <button type="button" class="tab-btn" id="tabBtnCampaigns">📊 Campanhas & Autoria</button>
+    </nav>
+
     <main class="content">
-      <div class="card sync-card">
-        <div class="sync-info">
-          <span class="status-dot"></span>
-          <span class="sync-text" id="syncStatus">Conteúdo Remoto: Sincronizado (v2.0.0)</span>
-        </div>
-      </div>
-
-      <div class="section">
-        <h2>Visual e Skin</h2>
-        <div class="form-group">
-          <label for="mascotSkin">Escolher Mascote / Skin</label>
-          <select id="mascotSkin">
-            <option value="gotinha">💧 Zé Gotinha Clássico</option>
-            <option value="gatinho_laranja">🐱 Gatinho Laranja</option>
-            <option value="robozinho_azul">🤖 Robozinho Azul</option>
-            <option value="mixed">🔀 Misturado (Rotativo)</option>
-          </select>
+      <!-- ABA 1: AJUSTES E CONFIGURAÇÕES DO MASCOTE -->
+      <div id="tabSettings" class="tab-pane active">
+        <div class="card sync-card">
+          <div class="sync-info">
+            <span class="status-dot"></span>
+            <span class="sync-text" id="syncStatus">Conteúdo Remoto: Sincronizado</span>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label for="mascotCount">Quantidade de Mascotes na Tela</label>
-          <div class="count-selector">
-            <button type="button" class="btn-count" data-count="1">1</button>
-            <button type="button" class="btn-count" data-count="2">2</button>
-            <button type="button" class="btn-count" data-count="3">3</button>
-            <button type="button" class="btn-count" data-count="4">4</button>
+        <div class="section">
+          <h2>Visual e Skin</h2>
+          <div class="form-group">
+            <label for="mascotSkin">Escolher Mascote / Skin</label>
+            <select id="mascotSkin">
+              <option value="gotinha">💧 Zé Gotinha Clássico</option>
+              <option value="gatinho_laranja">🐱 Gatinho Laranja</option>
+              <option value="robozinho_azul">🤖 Robozinho Azul</option>
+              <option value="mixed">🔀 Misturado (Rotativo)</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Quantidade de Mascotes na Tela</label>
+            <div class="count-selector">
+              <button type="button" class="btn-count" data-count="1">1</button>
+              <button type="button" class="btn-count" data-count="2">2</button>
+              <button type="button" class="btn-count" data-count="3">3</button>
+              <button type="button" class="btn-count" data-count="4">4</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Ajustes Físicos</h2>
+          <div class="form-group">
+            <div class="label-val">
+              <label for="size">Tamanho</label>
+              <span id="sizeVal">64px</span>
+            </div>
+            <input type="range" id="size" min="40" max="128" step="4" value="64">
+          </div>
+
+          <div class="form-group">
+            <div class="label-val">
+              <label for="speedMultiplier">Velocidade</label>
+              <span id="speedVal">1.0x</span>
+            </div>
+            <input type="range" id="speedMultiplier" min="0.5" max="2.5" step="0.1" value="1.0">
+          </div>
+
+          <div class="form-group">
+            <div class="label-val">
+              <label for="opacity">Opacidade</label>
+              <span id="opacityVal">90%</span>
+            </div>
+            <input type="range" id="opacity" min="0.3" max="1.0" step="0.05" value="0.9">
+          </div>
+        </div>
+
+        <div class="section">
+          <h2>Comportamento e Interação</h2>
+          <div class="toggle-row">
+            <span>Reagir a Chamadas de Pacientes</span>
+            <label class="switch sm">
+              <input type="checkbox" id="callAwareness" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+          <div class="toggle-row">
+            <span>Exibir Campanhas de Saúde</span>
+            <label class="switch sm">
+              <input type="checkbox" id="campaignsEnabled" checked>
+              <span class="slider round"></span>
+            </label>
           </div>
         </div>
       </div>
 
-      <div class="section">
-        <h2>Ajustes Físicos</h2>
-        <div class="form-group">
-          <div class="label-val">
-            <label for="size">Tamanho</label>
-            <span id="sizeVal">64px</span>
+      <!-- ABA 2: PAINEL ADMINISTRATIVO DE CAMPANHAS E CONTEÚDO -->
+      <div id="tabCampaigns" class="tab-pane">
+        <!-- Dashboard de Métricas de Conteúdo -->
+        <div class="admin-dashboard">
+          <div class="metric-card">
+            <span class="metric-val" id="metricTotal">0</span>
+            <span class="metric-lbl">Total</span>
           </div>
-          <input type="range" id="size" min="40" max="128" step="4" value="64">
+          <div class="metric-card active">
+            <span class="metric-val" id="metricActive">0</span>
+            <span class="metric-lbl">Ativas</span>
+          </div>
+          <div class="metric-card future">
+            <span class="metric-val" id="metricFuture">0</span>
+            <span class="metric-lbl">Futuras</span>
+          </div>
+          <div class="metric-card expired">
+            <span class="metric-val" id="metricExpired">0</span>
+            <span class="metric-lbl">Expiradas</span>
+          </div>
+          <div class="metric-card inactive">
+            <span class="metric-val" id="metricInactive">0</span>
+            <span class="metric-lbl">Inativas</span>
+          </div>
         </div>
 
-        <div class="form-group">
-          <div class="label-val">
-            <label for="speedMultiplier">Velocidade</label>
-            <span id="speedVal">1.0x</span>
+        <!-- Barra de Status e Atualização Remota -->
+        <div class="admin-bar">
+          <div class="admin-status-info">
+            <span class="status-indicator online" id="netIndicator"></span>
+            <span class="admin-status-text" id="adminStatusText">Conectado (v2026.08.08.005)</span>
           </div>
-          <input type="range" id="speedMultiplier" min="0.5" max="2.5" step="0.1" value="1.0">
+          <button type="button" class="btn-refresh-remote" id="btnRefreshRemote" title="Verificar atualizações no GitHub">
+            ↻ Verificar Remoto
+          </button>
+        </div>
+        <div class="refresh-feedback" id="refreshFeedback"></div>
+
+        <!-- Filtros por Estado Temporal -->
+        <div class="filter-pills">
+          <button type="button" class="pill-btn active" data-filter="all">Todas</button>
+          <button type="button" class="pill-btn" data-filter="active">Ativas</button>
+          <button type="button" class="pill-btn" data-filter="future">Futuras</button>
+          <button type="button" class="pill-btn" data-filter="expired">Expiradas</button>
+          <button type="button" class="pill-btn" data-filter="inactive">Inativas</button>
         </div>
 
-        <div class="form-group">
-          <div class="label-val">
-            <label for="opacity">Opacidade</label>
-            <span id="opacityVal">90%</span>
-          </div>
-          <input type="range" id="opacity" min="0.3" max="1.0" step="0.05" value="0.9">
+        <!-- Lista Dinâmica de Campanhas -->
+        <div class="campaign-list" id="campaignListContainer">
+          <div class="empty-state">Carregando campanhas...</div>
         </div>
-      </div>
 
-      <div class="section">
-        <h2>Comportamento e Interação</h2>
-        <div class="toggle-row">
-          <span>Reagir a Chamadas de Pacientes</span>
-          <label class="switch sm">
-            <input type="checkbox" id="callAwareness" checked>
-            <span class="slider round"></span>
-          </label>
-        </div>
-        <div class="toggle-row">
-          <span>Exibir Campanhas de Saúde</span>
-          <label class="switch sm">
-            <input type="checkbox" id="campaignsEnabled" checked>
-            <span class="slider round"></span>
-          </label>
+        <!-- Seção de Preview dos Mascotes e Ativos de Autoria -->
+        <div class="section mascot-preview-section">
+          <h2>Mascotes & Ativos Registrados</h2>
+          <div class="mascot-preview-grid" id="mascotPreviewGrid">
+            <!-- Renderizado dinamicamente pelo PopupController -->
+          </div>
         </div>
       </div>
     </main>
 
     <footer class="footer">
-      <p>Versão 2.0.0 — UBS Betim / SIGSS</p>
+      <p id="footerText">Versão 2.0.0 — UBS Betim / SIGSS</p>
     </footer>
   </div>
 
