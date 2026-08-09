@@ -23,7 +23,7 @@
 | **TASK-206** | Validação E2E do Content Authoring System com Conteúdo Declarativo Remoto | Alta | TASK-205 | 🌐 Remote Content / 👁️ Visual QA | Adição de nova skin (Emerald), mensagem e campanha usando 100% arquivos declarativos de `content/` sem alterar TypeScript. | E2E Visual & GitHub Raw | 🟢 **Validado E2E** |
 | **TASK-201** | Suporte a Spritesheets PNG e Animações Frame-by-Frame para Skins Complexas | Média | TASK-206 | 🌐 Remote Content / 💻 Developer | Atlas PNG codificados em base64 Data URI, validação em `compile-content.js`, integração FSM (`CELEBRATE`, `RUN`) e fallback para SVG. | Vitest 21/21 & E2E Visual | 🟢 **Concluído** |
 | **TASK-202** | Painel Administrativo de Visualização de Campanhas e Agendamento por Data | Média | TASK-206 | 🎨 Frontend/UI / ✍️ Content | Interface no Popup com Dashboard de métricas, pílulas de filtro (`FUTURA`, `ATIVA`, `EXPIRADA`, `INATIVA`), ordenação por prioridade, botão de refresh remoto e preview de mascotes. | Vitest 27/27 & E2E Visual | 🟢 **Concluído** |
-| **TASK-203** | Implementação da Suíte E2E Automatizada com Playwright Headless | Alta | TASK-202 | 🧪 QA / 👁️ Visual QA | Script automatizado de regressão visual integrado ao fluxo de build. | `npm run test:e2e` | 🟡 **Aguardando Início** |
+| **TASK-203** | Implementação da Suíte E2E Automatizada com Playwright Headless | Alta | TASK-202 | 🧪 QA / 👁️ Visual QA | Suíte de testes automatizados E2E cobrindo 12 cenários (Boot, Popup, Campanhas, Interceptação HTTP, Hot-Reload sem F5, Spritesheet, Fallback, Offline, XSS, Responsividade). | Playwright 12/12 PASS & Vitest 27/27 PASS | 🟢 **Concluído** |
 | **TASK-204** | Preparação do Pacote de Release v2.0.0 (Tag Semântica + Changelog) | Restrita | TASK-203 | 🚀 Git/Release | Tag Git `v2.0.0` e arquivo `CHANGELOG.md` prontos para revisão do usuário. | Audit de release | 🔴 **Exige Aprovação Humana** |
 
 ---
@@ -32,7 +32,7 @@
 
 ```mermaid
 graph TD
-    subgraph Fase 1 & 2 Concluídas - Pipeline Remoto, Content Authoring, Spritesheets & Campaign Admin
+    subgraph Fase 1 & 2 Concluídas - Pipeline Remoto, Content Authoring, Spritesheets, Admin Dashboard & Playwright E2E
         T101[TASK-101: Docs & Audit] --> T102[TASK-102: TypeScript Types]
         T102 --> T103[TASK-103: Remote Content Live Reload]
         T102 --> T105[TASK-105: Mascot Memory Leak Fix]
@@ -46,11 +46,10 @@ graph TD
         T205 --> T206[TASK-206: Content Authoring E2E]
         T206 --> T201[TASK-201: PNG Spritesheets]
         T206 --> T202[TASK-202: Campaign Admin Dashboard]
+        T201 & T202 --> T203[TASK-203: Playwright E2E Suite]
     end
 
-    subgraph Próxima Fase (Desenvolvimento Paralelo)
-        T201 & T202 --> T203[TASK-203: Playwright E2E Suite]
-        
+    subgraph Próxima Fase (Release & Entregável Final)
         T203 --> T204[TASK-204: Release v2.0.0 Package]
     end
 ```

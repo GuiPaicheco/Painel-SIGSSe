@@ -1,0 +1,43 @@
+{
+  "contentVersion": "2026.08.08.001",
+  "schemaVersion": "1.0",
+  "minExtensionVersion": "2.0.0",
+  "updatedAt": "2026-08-08T12:00:00.000Z",
+  "mascots": [
+    {
+      "id": "gotinha",
+      "name": "Zé Gotinha Clássico",
+      "version": "2.0.0",
+      "defaultSkin": "default",
+      "skins": {
+        "default": {
+          "id": "default",
+          "name": "Clássico",
+          "type": "svg",
+          "src": "<svg viewBox=\"0 0 64 64\" id=\"e2e-v1-svg\"><circle cx=\"32\" cy=\"32\" r=\"28\" fill=\"#0288D1\"/></svg>",
+          "width": 64,
+          "height": 64
+        }
+      }
+    }
+  ],
+  "campaigns": [
+    {
+      "id": "campanha_v1",
+      "title": "Campanha E2E Versão 1",
+      "priority": 10,
+      "active": true,
+      "startDate": "2026-01-01T00:00:00Z",
+      "endDate": "2026-12-31T23:59:59Z",
+      "messages": [
+        {
+          "id": "msg_v1",
+          "text": "Versão 001 Inicial de Teste E2E",
+          "category": "health_tip",
+          "displayDurationSeconds": 5,
+          "active": true
+        }
+      ]
+    }
+  ]
+}
